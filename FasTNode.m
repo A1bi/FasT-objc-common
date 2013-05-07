@@ -47,6 +47,7 @@ static NSString *kNodeUrl = @"fast.albisigns";
 	self = [super init];
 	if (self) {
         io = [[SocketIO alloc] initWithDelegate:self];
+        [io setResource:@"node"];
         
         [self connect];
 	}
