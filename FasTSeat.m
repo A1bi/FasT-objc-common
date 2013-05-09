@@ -32,8 +32,10 @@
 - (void)updateWithInfo:(NSDictionary *)info
 {
     NSDictionary *grid = info[@"grid"];
-    posX = [grid[@"x"] intValue];
-    posY = [grid[@"y"] intValue];
+    if (grid) {
+        posX = [grid[@"x"] intValue];
+        posY = [grid[@"y"] intValue];
+    }
     
     reserved = [info[@"reserved"] boolValue];
     selected = [info[@"selected"] boolValue];

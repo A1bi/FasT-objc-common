@@ -29,14 +29,23 @@
         [self setDates:[NSArray arrayWithArray:tmp]];
         
         tmp = [NSMutableArray array];
-        for (NSDictionary *typeInfo in info[@"ticketTypes"]) {
+        for (NSDictionary *typeInfo in info[@"ticket_types"]) {
             FasTTicketType *type = [[[FasTTicketType alloc] initWithInfo:typeInfo] autorelease];
             [tmp addObject:type];
         }
         [self setTicketTypes:[NSArray arrayWithArray:tmp]];
         
         seats = [[NSMutableDictionary dictionary] retain];
-        [self updateSeats:info[@"seats"]];
+        for (FasTEventDate *date in dates) {
+            NSMutableDictionary *dateSeats = [NSMutableDictionary dictionary];
+            seats[[date dateId]] = dateSeats;
+            
+            for (NSDictionary *seatInfo in info[@"seats"]) {
+                NSDictionary *info = @{ @"grid": seatInfo[@"grid"], @"reserved": seatInfo[@"reserved"][[date dateId]] };
+                FasTSeat *seat = [[FasTSeat alloc] initWithId:seatInfo[@"id"] andInfo:info];
+                dateSeats[[seat seatId]] = seat;
+            }
+        }
     }
     return self;
 }
@@ -55,21 +64,10 @@
 - (void)updateSeats:(NSDictionary *)seatsInfo
 {
     for (NSString *dateId in seatsInfo) {
-        NSMutableDictionary *eventDateSeats = seats[dateId];
-        if (!eventDateSeats) {
-            eventDateSeats = [NSMutableDictionary dictionary];
-            seats[dateId] = eventDateSeats;
-        }
-        
         NSDictionary *dateSeats = seatsInfo[dateId];
         for (NSString *seatId in dateSeats) {
-            FasTSeat *seat = eventDateSeats[seatId];
-            if (!seat) {
-                seat = [[FasTSeat alloc] initWithId:seatId andInfo:dateSeats[seatId]];
-                eventDateSeats[seatId] = seat;
-            } else {
-                [seat updateWithInfo:dateSeats[seatId]];
-            }
+            FasTSeat *seat = seats[dateId][seatId];
+            [seat updateWithInfo:dateSeats[seatId]];
         }
     }
 }

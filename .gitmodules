@@ -1,3 +1,6 @@
 [submodule "submodules/socket.IO"]
 	path = submodules/socket.IO
 	url = git@github.com:A1bi/socket.IO-objc.git
+[submodule "submodules/MKNetworkKit"]
+	path = submodules/MKNetworkKit
+	url = git://github.com/MugunthKumar/MKNetworkKit.git
