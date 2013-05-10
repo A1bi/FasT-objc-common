@@ -23,5 +23,6 @@
 
 - (id)initWithInfo:(NSDictionary *)info;
 - (void)updateSeats:(NSDictionary *)seatsInfo;
+- (id)objectFromArray:(NSString *)arrayName withId:(NSString *)objId usingIdName:(NSString *)idName;
 
 @end

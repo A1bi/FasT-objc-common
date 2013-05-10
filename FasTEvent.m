@@ -72,4 +72,11 @@
     }
 }
 
+- (id)objectFromArray:(NSString *)arrayName withId:(NSString *)objId usingIdName:(NSString *)idName
+{
+    NSArray *array = [self performSelector:NSSelectorFromString(arrayName)];
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%K == %@", [NSString stringWithFormat:@"%@Id", idName], objId];
+    return [array filteredArrayUsingPredicate:predicate][0];
+}
+
 @end

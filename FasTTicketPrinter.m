@@ -32,7 +32,6 @@ static const double kRotationRadians = -90 * M_PI / 180;
 - (CGSize)drawText:(NSString *)text withFontSize:(NSString *)size;
 - (CGSize)drawText:(NSString *)text withFontSize:(NSString *)size andIncreaseY:(BOOL)incY;
 - (void)drawHorizontalArrayOfTexts:(NSArray *)texts withFontSize:(NSString *)fontSize margin:(CGFloat)margin;
-- (id)objectFromEventArray:(NSString *)arrayName withId:(NSString *)objId usingIdName:(NSString *)idName;
 
 @end
 
@@ -144,7 +143,7 @@ static const double kRotationRadians = -90 * M_PI / 180;
     CGSize size = [self drawText:[event name] withFont:eventTitleFont];
     posY += size.height + 5;
     
-    FasTEventDate *date = [self objectFromEventArray:@"dates" withId:info[@"date"] usingIdName:@"date"];
+    FasTEventDate *date = [event objectFromArray:@"dates" withId:info[@"date"] usingIdName:@"date"];
     [self drawText:[date localizedString] withFontSize:@"normal" andIncreaseY:YES];
     
     [self drawText:@"Einlass ab 19.00 Uhr" withFontSize:@"small" andIncreaseY:YES];
@@ -170,7 +169,7 @@ static const double kRotationRadians = -90 * M_PI / 180;
     CGFloat tmpX = posX;
     UIFont *font = fonts[@"normal"];
     
-    FasTTicketType *ticketType = [self objectFromEventArray:@"ticketTypes" withId:typeId usingIdName:@"type"];
+    FasTTicketType *ticketType = [event objectFromArray:@"ticketTypes" withId:typeId usingIdName:@"type"];
     
     NSString *printString = [ticketType name];
     CGSize size = [printString sizeWithFont:font];
@@ -248,16 +247,6 @@ static const double kRotationRadians = -90 * M_PI / 180;
     }
     
     posX = tmpX;
-}
-
-- (id)objectFromEventArray:(NSString *)arrayName withId:(NSString *)objId usingIdName:(NSString *)idName
-{
-    NSArray *array = [event performSelector:NSSelectorFromString(arrayName)];
-    for (id obj in array) {
-        NSString *foundObjId = [obj performSelector:NSSelectorFromString([NSString stringWithFormat:@"%@Id", idName])];
-        if ([foundObjId isEqualToString:objId]) return obj;
-    }
-    return nil;
 }
 
 @end

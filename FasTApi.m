@@ -8,6 +8,7 @@
 
 #import "FasTApi.h"
 #import "FasTEvent.h"
+#import "FasTOrder.h"
 #import "MKNetworkEngine.h"
 #import "SocketIOPacket.h"
 
@@ -22,12 +23,13 @@ static NSString *kApiUrl = @"fast.albisigns";
 - (void)postNotificationWithName:(NSString *)name info:(NSDictionary *)info;
 - (void)initConnections;
 - (void)initEventWithInfo:(NSDictionary *)info;
+- (void)updateOrdersWithInfo:(NSDictionary *)info;
 
 @end
 
 @implementation FasTApi
 
-@synthesize event;
+@synthesize event, clientType;
 
 + (FasTApi *)defaultApi
 {
@@ -45,7 +47,7 @@ static NSString *kApiUrl = @"fast.albisigns";
 
 - (id)init
 {
-	if (defaultApi) {
+    if (defaultApi) {
 		return defaultApi;
 	}
 	
@@ -55,11 +57,16 @@ static NSString *kApiUrl = @"fast.albisigns";
         
         sIO = [[SocketIO alloc] initWithDelegate:self];
         [sIO setResource:@"node"];
-        
-        [self initConnections];
 	}
 	
 	return self;
+}
+
+- (void)initWithClientType:(NSString *)ct
+{
+	clientType = [ct retain];
+    
+    [self initConnections];
 }
 
 - (void)dealloc
@@ -67,6 +74,7 @@ static NSString *kApiUrl = @"fast.albisigns";
     [netEngine release];
     [sIO release];
     [event release];
+    [clientType release];
     [super dealloc];
 }
 
@@ -87,6 +95,9 @@ static NSString *kApiUrl = @"fast.albisigns";
         
     } else if ([[packet name] isEqualToString:@"orderPlaced"]) {
         [self postNotificationWithName:[packet name] info:info];
+    
+    } else if ([[packet name] isEqualToString:@"updateOrders"]) {
+        [self updateOrdersWithInfo:info[@"orders"]];
     }
 }
 
@@ -123,6 +134,13 @@ static NSString *kApiUrl = @"fast.albisigns";
 	[netEngine enqueueOperation:op];
 }
 
+- (void)getOrders
+{
+    [self getResource:@"orders" withAction:@"retail/1" callback:^(NSDictionary *response) {
+        [self updateOrdersWithInfo:response];
+    }];
+}
+
 #pragma mark node methods
 
 - (void)updateOrderWithStep:(NSString *)step info:(NSDictionary *)info callback:(void (^)(NSDictionary *))callback
@@ -140,7 +158,7 @@ static NSString *kApiUrl = @"fast.albisigns";
 - (void)connectToNode
 {
     [sIO setUseSecure:YES];
-    [sIO connectToHost:kApiUrl onPort:0 withParams:@{ @"retailId": @"1" } withNamespace:@"/retail"];
+    [sIO connectToHost:kApiUrl onPort:0 withParams:@{ @"retailId": @"1" } withNamespace:[NSString stringWithFormat:@"/%@", clientType]];
 }
 
 - (void)postNotificationWithName:(NSString *)name info:(NSDictionary *)info
@@ -162,6 +180,16 @@ static NSString *kApiUrl = @"fast.albisigns";
 - (void)initEventWithInfo:(NSDictionary *)info
 {
     [self setEvent:[[FasTEvent alloc] initWithInfo:info]];
+}
+
+- (void)updateOrdersWithInfo:(NSDictionary *)info
+{
+    NSMutableArray *orders = [NSMutableArray array];
+    for (NSDictionary *orderInfo in info) {
+        [orders addObject:[[FasTOrder alloc] initWithInfo:orderInfo event:event]];
+    }
+    
+    [self postNotificationWithName:@"updateOrders" info:@{ @"orders": [NSArray arrayWithArray:orders] }];
 }
 
 @end
