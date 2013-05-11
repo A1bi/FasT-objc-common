@@ -141,6 +141,11 @@ static NSString *kApiUrl = @"fast.albisigns";
     }];
 }
 
+- (void)markOrderAsPaid:(FasTOrder *)order withCallback:(FasTApiResponseBlock)callback
+{
+    [self postResource:@"orders" withAction:[NSString stringWithFormat:@"%@/mark_paid", [order orderId]] data:nil callback:callback];
+}
+
 #pragma mark node methods
 
 - (void)updateOrderWithStep:(NSString *)step info:(NSDictionary *)info callback:(void (^)(NSDictionary *))callback

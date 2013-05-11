@@ -12,6 +12,7 @@
 typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 
 @class FasTEvent;
+@class FasTOrder;
 @class MKNetworkEngine;
 
 @interface FasTApi : NSObject <SocketIODelegate>
@@ -33,5 +34,6 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 - (void)updateOrderWithStep:(NSString *)step info:(NSDictionary *)info callback:(void (^)(NSDictionary *))callback;
 - (void)reserveSeatWithId:(NSString *)seatId;
 - (void)getOrders;
+- (void)markOrderAsPaid:(FasTOrder *)order withCallback:(FasTApiResponseBlock)callback;
 
 @end

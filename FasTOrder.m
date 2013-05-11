@@ -28,7 +28,7 @@
         for (NSDictionary *ticketInfo in info[@"tickets"]) {
             [tmpTickets addObject:[[FasTTicket alloc] initWithInfo:ticketInfo event:event]];
         }
-        tickets = [NSArray arrayWithArray:tmpTickets];
+        tickets = [[NSArray arrayWithArray:tmpTickets] retain];
     }
     return self;
 }
