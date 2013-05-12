@@ -80,6 +80,11 @@ static NSString *kApiUrl = @"fast.albisigns";
 
 #pragma mark SocketIO delegate methods
 
+- (void)socketIODidConnect:(SocketIO *)socket
+{
+    [self postNotificationWithName:@"ready" info:nil];
+}
+
 - (void)socketIO:(SocketIO *)socket didReceiveEvent:(SocketIOPacket *)packet
 {
     NSDictionary *info = [packet dataAsJSON][@"args"][0];

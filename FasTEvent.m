@@ -76,7 +76,12 @@
 {
     NSArray *array = [self performSelector:NSSelectorFromString(arrayName)];
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%K == %@", [NSString stringWithFormat:@"%@Id", idName], objId];
-    return [array filteredArrayUsingPredicate:predicate][0];
+    @try {
+        return [array filteredArrayUsingPredicate:predicate][0];
+    }
+    @catch (NSException *exception) {
+        return nil;
+    }
 }
 
 @end
