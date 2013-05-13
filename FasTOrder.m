@@ -7,6 +7,8 @@
 //
 
 #import "FasTOrder.h"
+#import "FasTEvent.h"
+#import "FasTEventDate.h"
 #import "FasTTicket.h"
 
 @implementation FasTOrder
@@ -26,7 +28,8 @@
         
         NSMutableArray *tmpTickets = [NSMutableArray array];
         for (NSDictionary *ticketInfo in info[@"tickets"]) {
-            [tmpTickets addObject:[[FasTTicket alloc] initWithInfo:ticketInfo event:event]];
+            FasTEventDate *d = [event objectFromArray:@"dates" withId:ticketInfo[@"dateId"] usingIdName:@"date"];
+            [tmpTickets addObject:[[FasTTicket alloc] initWithInfo:ticketInfo date:d order:self]];
         }
         tickets = [[NSArray arrayWithArray:tmpTickets] retain];
     }

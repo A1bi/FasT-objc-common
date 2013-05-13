@@ -11,6 +11,7 @@
 @class PKPrintSettings;
 @class PKPrinter;
 @class FasTEvent;
+@class FasTOrder;
 
 @interface FasTTicketPrinter : NSObject
 {
@@ -21,11 +22,8 @@
     NSString *ticketsPath;
     PKPrintSettings *printSettings;
     PKPrinter *printer;
-    NSDictionary *orderInfo;
-    FasTEvent *event;
 }
 
-- (id)initWithEvent:(FasTEvent *)e;
-- (void)printTicketsForOrderWithInfo:(NSDictionary *)info;
+- (void)printTicketsForOrder:(FasTOrder *)order;
 
 @end

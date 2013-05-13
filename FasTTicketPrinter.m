@@ -10,6 +10,9 @@
 #import "FasTEvent.h"
 #import "FasTEventDate.h"
 #import "FasTTicketType.h"
+#import "FasTOrder.h"
+#import "FasTTicket.h"
+#import "FasTSeat.h"
 #import "PKPrinter.h"
 #import "PKPrintSettings.h"
 #import "PKPaper.h"
@@ -19,30 +22,29 @@ static const double kRotationRadians = -90 * M_PI / 180;
 
 @interface FasTTicketPrinter ()
 
-- (void)generatePDFWithOrderInfo:(NSDictionary *)info;
-- (void)generateTicketWithInfo:(NSDictionary *)info;
+- (void)generatePDFWithOrder:(FasTOrder *)order;
+- (void)generateTicket:(FasTTicket *)ticket;
 - (void)drawBarcodeWithContent:(NSString *)content;
 - (void)drawLogo;
-- (void)drawEventInfoWithInfo:(NSDictionary *)info;
-- (void)drawSeatInfoWithInfo:(NSDictionary *)info;
-- (void)drawTicketTypeInfoWithId:(NSString *)typeId;
-- (void)drawBottomInfoWithInfo:(NSDictionary *)info;
+- (void)drawEventInfoForDate:(FasTEventDate *)date;
+- (void)drawSeatInfo:(FasTSeat *)seat;
+- (void)drawTicketTypeInfo:(FasTTicketType *)type;
+- (void)drawBottomInfoForTicket:(FasTTicket *)ticket;
 - (void)drawSeparatorWithSize:(CGSize)size;
 - (CGSize)drawText:(NSString *)text withFont:(UIFont *)font;
 - (CGSize)drawText:(NSString *)text withFontSize:(NSString *)size;
 - (CGSize)drawText:(NSString *)text withFontSize:(NSString *)size andIncreaseY:(BOOL)incY;
 - (void)drawHorizontalArrayOfTexts:(NSArray *)texts withFontSize:(NSString *)fontSize margin:(CGFloat)margin;
+- (NSArray *)arrayOfStrings:(NSArray *)strings withLocalizedCaptionsFromKeys:(NSArray *)keys;
 
 @end
 
 @implementation FasTTicketPrinter
 
-- (id)initWithEvent:(FasTEvent *)e
+- (id)init
 {
     self = [super init];
     if (self) {
-        event = [e retain];
-        
         ticketWidth = 595, ticketHeight = 240;
         
         NSString *fontName = @"Avenir";
@@ -70,37 +72,33 @@ static const double kRotationRadians = -90 * M_PI / 180;
     [ticketsPath release];
     [printSettings release];
     [printer release];
-    [orderInfo release];
-    [event release];
     [super dealloc];
 }
 
-- (void)printTicketsForOrderWithInfo:(NSDictionary *)info
+- (void)printTicketsForOrder:(FasTOrder *)order
 {
-    [self generatePDFWithOrderInfo:info];
+    [self generatePDFWithOrder:order];
 
     [printer printURL:[NSURL fileURLWithPath:ticketsPath] ofType:@"application/pdf" printSettings:printSettings];
     
     [[NSFileManager defaultManager] removeItemAtPath:ticketsPath error:nil];
 }
 
-- (void)generatePDFWithOrderInfo:(NSDictionary *)info
+- (void)generatePDFWithOrder:(FasTOrder *)order
 {
     UIGraphicsBeginPDFContextToFile(ticketsPath, CGRectMake(0, 0, ticketHeight, ticketWidth), nil);
     context = UIGraphicsGetCurrentContext();
     
     CGContextSetFillColorWithColor(context, [[UIColor blackColor] CGColor]);
     
-    [orderInfo release];
-    orderInfo = [@{@"number": info[@"number"]} retain];
-    for (NSDictionary *ticket in info[@"tickets"]) {
-        [self generateTicketWithInfo:ticket];
+    for (FasTTicket *ticket in [order tickets]) {
+        [self generateTicket:ticket];
     }
     
     UIGraphicsEndPDFContext();
 }
 
-- (void)generateTicketWithInfo:(NSDictionary *)info
+- (void)generateTicket:(FasTTicket *)ticket
 {
     posX = 0, posY = 0;
     UIGraphicsBeginPDFPage();
@@ -110,10 +108,10 @@ static const double kRotationRadians = -90 * M_PI / 180;
     
     [self drawBarcodeWithContent:nil];
     [self drawLogo];
-    [self drawEventInfoWithInfo:info];
-    [self drawSeatInfoWithInfo:info[@"seat"]];
-    [self drawTicketTypeInfoWithId:info[@"type"]];
-    [self drawBottomInfoWithInfo:info];
+    [self drawEventInfoForDate:[ticket date]];
+    [self drawSeatInfo:[ticket seat]];
+    [self drawTicketTypeInfo:[ticket type]];
+    [self drawBottomInfoForTicket:ticket];
 }
 
 - (void)drawBarcodeWithContent:(NSString *)content
@@ -137,13 +135,12 @@ static const double kRotationRadians = -90 * M_PI / 180;
     [logo drawInRect:logoRect];
 }
 
-- (void)drawEventInfoWithInfo:(NSDictionary *)info
+- (void)drawEventInfoForDate:(FasTEventDate *)date
 {
     UIFont *eventTitleFont = [UIFont fontWithName:@"SnellRoundhand" size:40];
-    CGSize size = [self drawText:[event name] withFont:eventTitleFont];
+    CGSize size = [self drawText:[[date event] name] withFont:eventTitleFont];
     posY += size.height + 5;
     
-    FasTEventDate *date = [event objectFromArray:@"dates" withId:info[@"date"] usingIdName:@"date"];
     [self drawText:[date localizedString] withFontSize:@"normal" andIncreaseY:YES];
     
     [self drawText:@"Einlass ab 19.00 Uhr" withFontSize:@"small" andIncreaseY:YES];
@@ -152,31 +149,26 @@ static const double kRotationRadians = -90 * M_PI / 180;
     posY += 30;
 }
 
-- (void)drawSeatInfoWithInfo:(NSDictionary *)info
+- (void)drawSeatInfo:(FasTSeat *)seat
 {
-    NSArray *texts = @[
-                       [NSString stringWithFormat:NSLocalizedStringByKey(@"blockName"), info[@"block"]],
-                       [NSString stringWithFormat:NSLocalizedStringByKey(@"rowNumber"), info[@"row"]],
-                       [NSString stringWithFormat:NSLocalizedStringByKey(@"seatNumber"), info[@"number"]]
-                       ];
-    [self drawHorizontalArrayOfTexts:texts withFontSize:@"small" margin:8];
+    NSArray *texts = @[[seat blockName], [seat row], [seat number]];
+    NSArray *keys = @[@"block", @"row", @"seat"];
+    [self drawHorizontalArrayOfTexts:[self arrayOfStrings:texts withLocalizedCaptionsFromKeys:keys] withFontSize:@"small" margin:8];
     
     posY -= 25;
 }
 
-- (void)drawTicketTypeInfoWithId:(NSString *)typeId
+- (void)drawTicketTypeInfo:(FasTTicketType *)type
 {
     CGFloat tmpX = posX;
     UIFont *font = fonts[@"normal"];
     
-    FasTTicketType *ticketType = [event objectFromArray:@"ticketTypes" withId:typeId usingIdName:@"type"];
-    
-    NSString *printString = [ticketType name];
+    NSString *printString = [type name];
     CGSize size = [printString sizeWithFont:font];
     posX = ticketWidth - size.width - 50;
     [self drawText:printString withFontSize:@"normal" andIncreaseY:YES];
     
-    printString = [ticketType localizedPrice];
+    printString = [type localizedPrice];
     size = [printString sizeWithFont:font];
     posX = ticketWidth - size.width - 50;
     [self drawText:printString withFontSize:@"normal" andIncreaseY:YES];
@@ -184,18 +176,15 @@ static const double kRotationRadians = -90 * M_PI / 180;
     posY += 23;
 }
 
-- (void)drawBottomInfoWithInfo:(NSDictionary *)info
+- (void)drawBottomInfoForTicket:(FasTTicket *)ticket
 {
     [self drawSeparatorWithSize:CGSizeMake(ticketWidth-posX-40, .5)];
     posY += 4;
     posX += 5;
     
-    NSArray *texts = @[
-                       [NSString stringWithFormat:NSLocalizedStringByKey(@"ticketNumber"), info[@"number"]],
-                       [NSString stringWithFormat:NSLocalizedStringByKey(@"orderNumber"), orderInfo[@"number"]],
-                       NSLocalizedStringByKey(@"websiteUrl")
-                       ];
-    [self drawHorizontalArrayOfTexts:texts withFontSize:@"tiny" margin:15];
+    NSArray *texts = @[[ticket number], [[ticket order] number]];
+    NSArray *keys = @[@"ticket", @"order"];
+    [self drawHorizontalArrayOfTexts:[self arrayOfStrings:texts withLocalizedCaptionsFromKeys:keys] withFontSize:@"tiny" margin:15];
 }
 
 - (void)drawSeparatorWithSize:(CGSize)size
@@ -247,6 +236,17 @@ static const double kRotationRadians = -90 * M_PI / 180;
     }
     
     posX = tmpX;
+}
+
+- (NSArray *)arrayOfStrings:(NSArray *)strings withLocalizedCaptionsFromKeys:(NSArray *)keys
+{
+    NSMutableArray *array = [NSMutableArray array];
+    int i = 0;
+    for (NSString *text in strings) {
+        [array addObject:[NSString stringWithFormat:@"%@: %@", NSLocalizedStringByKey(keys[i]), text]];
+        i++;
+    }
+    return array;
 }
 
 @end

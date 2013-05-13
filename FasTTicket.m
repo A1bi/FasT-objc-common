@@ -7,6 +7,7 @@
 //
 
 #import "FasTTicket.h"
+#import "FasTOrder.h"
 #import "FasTEvent.h"
 #import "FasTEventDate.h"
 #import "FasTTicketType.h"
@@ -14,17 +15,20 @@
 
 @implementation FasTTicket
 
-@synthesize ticketId, number, date, type, seat, price;
+@synthesize ticketId, number, order, date, type, seat, price;
 
-- (id)initWithInfo:(NSDictionary *)info event:(FasTEvent *)event
+- (id)initWithInfo:(NSDictionary *)info date:(FasTEventDate *)d order:(FasTOrder *)o
 {
     self = [super init];
     if (self) {
+        order = [o retain];
+        date = [d retain];
+        
         ticketId = [info[@"id"] retain];
         number = [info[@"number"] retain];
         price = [info[@"price"] floatValue];
         
-        date = [[event objectFromArray:@"dates" withId:info[@"dateId"] usingIdName:@"date"] retain];
+        FasTEvent *event = [date event];
         type = [[event objectFromArray:@"ticketTypes" withId:info[@"typeId"] usingIdName:@"type"] retain];
         seat = [[event seats][[date dateId]][info[@"seatId"]] retain];
     }
@@ -38,6 +42,7 @@
     [date release];
     [type release];
     [seat release];
+    [order release];
     [super dealloc];
 }
 

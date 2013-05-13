@@ -7,16 +7,19 @@
 //
 
 #import "FasTEventDate.h"
+#import "FasTEvent.h"
 #import "FasTFormatter.h"
 
 @implementation FasTEventDate
 
-@synthesize date, dateId;
+@synthesize date, dateId, event;
 
-- (id)initWithInfo:(NSDictionary *)info
+- (id)initWithInfo:(NSDictionary *)info event:(FasTEvent *)e
 {
     self = [super init];
     if (self) {
+        event = [e retain];
+        
         NSInteger dateTimestamp = [info[@"date"] integerValue];
         date = [[NSDate dateWithTimeIntervalSince1970:dateTimestamp] retain];
         
@@ -29,6 +32,7 @@
 {
     [date release];
     [dateId release];
+    [event release];
     [super dealloc];
 }
 

@@ -8,16 +8,20 @@
 
 #import <Foundation/Foundation.h>
 
+@class FasTEvent;
+
 @interface FasTEventDate : NSObject
 {
     NSDate *date;
     NSString *dateId;
+    FasTEvent *event;
 }
 
 @property (nonatomic, readonly) NSDate *date;
 @property (nonatomic, readonly) NSString *dateId;
+@property (nonatomic, readonly) FasTEvent *event;
 
-- (id)initWithInfo:(NSDictionary *)info;
+- (id)initWithInfo:(NSDictionary *)info event:(FasTEvent *)event;
 
 - (NSString *)localizedString;
 

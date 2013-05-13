@@ -16,7 +16,7 @@
     NSString *orderId;
     NSString *number;
     NSString *queueNumber;
-	FasTEventDate *date;
+	FasTEventDate *date; // TODO: remove this and rework the whole ticket number part in the ordering process
 	NSArray *tickets;
     NSDate *created;
     NSInteger numberOfTickets;

@@ -23,7 +23,7 @@
         
         NSMutableArray *tmp = [NSMutableArray array];
         for (NSDictionary *dateInfo in info[@"dates"]) {
-            FasTEventDate *date = [[[FasTEventDate alloc] initWithInfo:dateInfo] autorelease];
+            FasTEventDate *date = [[[FasTEventDate alloc] initWithInfo:dateInfo event:self] autorelease];
             [tmp addObject:date];
         }
         [self setDates:[NSArray arrayWithArray:tmp]];
@@ -41,8 +41,7 @@
             seats[[date dateId]] = dateSeats;
             
             for (NSDictionary *seatInfo in info[@"seats"]) {
-                NSDictionary *info = @{ @"grid": seatInfo[@"grid"], @"reserved": seatInfo[@"reserved"][[date dateId]] };
-                FasTSeat *seat = [[FasTSeat alloc] initWithId:seatInfo[@"id"] andInfo:info];
+                FasTSeat *seat = [[FasTSeat alloc] initWithInfo:seatInfo reserved:[seatInfo[@"reserved"][[date dateId]] boolValue]];
                 dateSeats[[seat seatId]] = seat;
             }
         }
