@@ -23,7 +23,7 @@ static NSString *kApiUrl = @"fast.albisigns";
 - (void)postNotificationWithName:(NSString *)name info:(NSDictionary *)info;
 - (void)initConnections;
 - (void)initEventWithInfo:(NSDictionary *)info;
-- (void)updateOrdersWithInfo:(NSDictionary *)info;
+- (void)updateOrdersWithArray:(NSDictionary *)info;
 
 @end
 
@@ -102,7 +102,7 @@ static NSString *kApiUrl = @"fast.albisigns";
         [self postNotificationWithName:[packet name] info:info];
     
     } else if ([[packet name] isEqualToString:@"updateOrders"]) {
-        [self updateOrdersWithInfo:info[@"orders"]];
+        [self updateOrdersWithArray:info];
     }
 }
 
@@ -142,7 +142,7 @@ static NSString *kApiUrl = @"fast.albisigns";
 - (void)getOrders
 {
     [self getResource:@"orders" withAction:@"retail/1" callback:^(NSDictionary *response) {
-        [self updateOrdersWithInfo:response];
+        [self updateOrdersWithArray:response];
     }];
 }
 
@@ -192,7 +192,7 @@ static NSString *kApiUrl = @"fast.albisigns";
     [self setEvent:[[FasTEvent alloc] initWithInfo:info]];
 }
 
-- (void)updateOrdersWithInfo:(NSDictionary *)info
+- (void)updateOrdersWithArray:(NSDictionary *)info
 {
     NSMutableArray *orders = [NSMutableArray array];
     for (NSDictionary *orderInfo in info) {
