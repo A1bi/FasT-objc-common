@@ -19,6 +19,7 @@
 
 #define kPointsToMilimetersFactor 35.28
 static const double kRotationRadians = -90 * M_PI / 180;
+static FasTTicketPrinter *sharedPrinter = nil;
 
 @interface FasTTicketPrinter ()
 
@@ -40,6 +41,19 @@ static const double kRotationRadians = -90 * M_PI / 180;
 @end
 
 @implementation FasTTicketPrinter
+
++ (FasTTicketPrinter *)sharedPrinter
+{
+    if (!sharedPrinter) {
+        sharedPrinter = [[super allocWithZone:NULL] init];
+    }
+    return sharedPrinter;
+}
+
++ (id)allocWithZone:(NSZone *)zone
+{
+    return [self sharedPrinter];
+}
 
 - (id)init
 {
@@ -77,11 +91,16 @@ static const double kRotationRadians = -90 * M_PI / 180;
 
 - (void)printTicketsForOrder:(FasTOrder *)order
 {
-    [self generatePDFWithOrder:order];
-
-    [printer printURL:[NSURL fileURLWithPath:ticketsPath] ofType:@"application/pdf" printSettings:printSettings];
-    
-    [[NSFileManager defaultManager] removeItemAtPath:ticketsPath error:nil];
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+    dispatch_async(queue, ^{
+        
+        [self generatePDFWithOrder:order];
+        
+        [printer printURL:[NSURL fileURLWithPath:ticketsPath] ofType:@"application/pdf" printSettings:printSettings];
+        
+        [[NSFileManager defaultManager] removeItemAtPath:ticketsPath error:nil];
+        
+    });
 }
 
 - (void)generatePDFWithOrder:(FasTOrder *)order
@@ -184,7 +203,9 @@ static const double kRotationRadians = -90 * M_PI / 180;
     
     NSArray *texts = @[[ticket number], [[ticket order] number]];
     NSArray *keys = @[@"ticket", @"order"];
-    [self drawHorizontalArrayOfTexts:[self arrayOfStrings:texts withLocalizedCaptionsFromKeys:keys] withFontSize:@"tiny" margin:15];
+    NSMutableArray *strings = [NSMutableArray arrayWithArray:[self arrayOfStrings:texts withLocalizedCaptionsFromKeys:keys]];
+    [strings addObject:NSLocalizedStringByKey(@"websiteUrl")];
+    [self drawHorizontalArrayOfTexts:strings withFontSize:@"tiny" margin:15];
 }
 
 - (void)drawSeparatorWithSize:(CGSize)size

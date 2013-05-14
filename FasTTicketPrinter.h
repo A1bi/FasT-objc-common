@@ -24,6 +24,8 @@
     PKPrinter *printer;
 }
 
++ (FasTTicketPrinter *)sharedPrinter;
+
 - (void)printTicketsForOrder:(FasTOrder *)order;
 
 @end
