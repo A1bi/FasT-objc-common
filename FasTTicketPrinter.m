@@ -24,6 +24,7 @@ static FasTTicketPrinter *sharedPrinter = nil;
 
 @interface FasTTicketPrinter ()
 
+- (void)initPrinter;
 - (void)generatePDFWithOrder:(FasTOrder *)order;
 - (void)generateTicket:(FasTTicket *)ticket;
 - (void)drawBarcodeForTicket:(FasTTicket *)ticket;
@@ -76,13 +77,16 @@ static FasTTicketPrinter *sharedPrinter = nil;
         printSettings = [[PKPrintSettings default] retain];
         [printSettings setPaper:ticketPaper];
         
-        printer = [[PKPrinter printerWithName:@"HP P1102w 3._ipp._tcp.local."] retain];
+        [self initPrinter];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(initPrinter) name:NSUserDefaultsDidChangeNotification object:nil];
     }
     return self;
 }
 
 - (void)dealloc
 {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [fonts release];
     [ticketsPath release];
     [printSettings release];
@@ -90,10 +94,20 @@ static FasTTicketPrinter *sharedPrinter = nil;
     [super dealloc];
 }
 
+- (void)initPrinter
+{
+    NSString *printerName = [[NSUserDefaults standardUserDefaults] objectForKey:FasTPrinterNamePrefKey];
+    if (printerName && (!printer || ![[printer name] isEqualToString:printerName])) {
+        [printer release];
+        printer = [[PKPrinter printerWithName:printerName] retain];
+    }
+}
+
 - (void)printTicketsForOrder:(FasTOrder *)order
 {
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
     dispatch_async(queue, ^{
+        if (!printer) return;
         
         [self generatePDFWithOrder:order];
         
