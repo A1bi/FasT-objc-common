@@ -13,6 +13,7 @@
 #import "FasTOrder.h"
 #import "FasTTicket.h"
 #import "FasTSeat.h"
+#import "FasTBarcode3of9.h"
 #import "PKPrinter.h"
 #import "PKPrintSettings.h"
 #import "PKPaper.h"
@@ -25,7 +26,7 @@ static FasTTicketPrinter *sharedPrinter = nil;
 
 - (void)generatePDFWithOrder:(FasTOrder *)order;
 - (void)generateTicket:(FasTTicket *)ticket;
-- (void)drawBarcodeWithContent:(NSString *)content;
+- (void)drawBarcodeForTicket:(FasTTicket *)ticket;
 - (void)drawLogo;
 - (void)drawEventInfoForDate:(FasTEventDate *)date;
 - (void)drawSeatInfo:(FasTSeat *)seat;
@@ -123,9 +124,9 @@ static FasTTicketPrinter *sharedPrinter = nil;
     UIGraphicsBeginPDFPage();
     // rotate pdf 90 degrees so the printer can print in portrait mode
     CGContextTranslateCTM(context, 0, ticketWidth);
-    CGContextRotateCTM (context, kRotationRadians);
+    CGContextRotateCTM(context, kRotationRadians);
     
-    [self drawBarcodeWithContent:nil];
+    [self drawBarcodeForTicket:ticket];
     [self drawLogo];
     [self drawEventInfoForDate:[ticket date]];
     [self drawSeatInfo:[ticket seat]];
@@ -133,12 +134,23 @@ static FasTTicketPrinter *sharedPrinter = nil;
     [self drawBottomInfoForTicket:ticket];
 }
 
-- (void)drawBarcodeWithContent:(NSString *)content
+- (void)drawBarcodeForTicket:(FasTTicket *)ticket
 {
-    posX = 10;
-    posY = 10;
-    //////
-    posX += 100;
+    CGFloat margin = 10,
+            height = 60, width = ticketHeight - margin * 2;
+    
+    posX = margin;
+    posY = margin;
+    
+    CGContextSaveGState(context);
+    CGContextTranslateCTM(context, posX + height + margin, 0);
+    CGContextRotateCTM(context, -kRotationRadians);
+    
+    NSString *content = [NSString stringWithFormat:@"T%@M0", [ticket number]];
+    [FasTBarcode3of9 drawInRect:CGRectMake(posX, posY, width, height) withContent:content];
+    
+    CGContextRestoreGState(context);
+    posX = margin + height + margin;
     
     [self drawSeparatorWithSize:CGSizeMake(.5, ticketHeight - posY * 2)];
     posX += 30;
