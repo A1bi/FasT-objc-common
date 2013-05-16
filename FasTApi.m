@@ -12,6 +12,11 @@
 #import "MKNetworkEngine.h"
 #import "SocketIOPacket.h"
 
+NSString * const FasTApiIsReadyNotification = @"FasTApiIsReadyNotification";
+NSString * const FasTApiUpdatedSeatsNotification = @"FasTApiUpdatedSeatsNotification";
+NSString * const FasTApiPlacedOrderNotification = @"FasTApiPlacedOrderNotification";
+NSString * const FasTApiUpdatedOrdersNotification = @"FasTApiUpdatedOrdersNotification";
+
 static FasTApi *defaultApi = nil;
 static NSString *kApiUrl = @"fast.albisigns";
 
@@ -42,7 +47,7 @@ static NSString *kApiUrl = @"fast.albisigns";
 
 + (id)allocWithZone:(NSZone *)zone
 {
-	return [self defaultApi];
+	return [[self defaultApi] retain];
 }
 
 - (id)init
@@ -82,7 +87,7 @@ static NSString *kApiUrl = @"fast.albisigns";
 
 - (void)socketIODidConnect:(SocketIO *)socket
 {
-    [self postNotificationWithName:@"ready" info:nil];
+    [self postNotificationWithName:FasTApiIsReadyNotification info:nil];
 }
 
 - (void)socketIO:(SocketIO *)socket didReceiveEvent:(SocketIOPacket *)packet
@@ -93,13 +98,13 @@ static NSString *kApiUrl = @"fast.albisigns";
         NSDictionary *seats = info[@"seats"];
         [event updateSeats:seats];
         
-        [self postNotificationWithName:[packet name] info:seats];
+        [self postNotificationWithName:FasTApiUpdatedSeatsNotification info:seats];
         
     } else if ([[packet name] isEqualToString:@"updateEvent"]) {
         [self initEventWithInfo:info[@"event"]];
         
     } else if ([[packet name] isEqualToString:@"orderPlaced"]) {
-        [self postNotificationWithName:[packet name] info:info];
+        [self postNotificationWithName:FasTApiPlacedOrderNotification info:info];
     
     } else if ([[packet name] isEqualToString:@"updateOrders"]) {
         [self updateOrdersWithArray:info];
@@ -189,17 +194,19 @@ static NSString *kApiUrl = @"fast.albisigns";
 
 - (void)initEventWithInfo:(NSDictionary *)info
 {
-    [self setEvent:[[FasTEvent alloc] initWithInfo:info]];
+    FasTEvent *ev = [[[FasTEvent alloc] initWithInfo:info] autorelease];
+    [self setEvent:ev];
 }
 
 - (void)updateOrdersWithArray:(NSDictionary *)info
 {
     NSMutableArray *orders = [NSMutableArray array];
     for (NSDictionary *orderInfo in info) {
-        [orders addObject:[[FasTOrder alloc] initWithInfo:orderInfo event:event]];
+        FasTOrder *order = [[[FasTOrder alloc] initWithInfo:orderInfo event:event] autorelease];
+        [orders addObject:order];
     }
     
-    [self postNotificationWithName:@"updateOrders" info:@{ @"orders": [NSArray arrayWithArray:orders] }];
+    [self postNotificationWithName:FasTApiUpdatedOrdersNotification info:@{ @"orders": [NSArray arrayWithArray:orders] }];
 }
 
 @end

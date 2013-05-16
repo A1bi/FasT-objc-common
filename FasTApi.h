@@ -9,6 +9,11 @@
 #import <Foundation/Foundation.h>
 #import "SocketIO.h"
 
+FOUNDATION_EXPORT NSString * const FasTApiIsReadyNotification;
+FOUNDATION_EXPORT NSString * const FasTApiUpdatedSeatsNotification;
+FOUNDATION_EXPORT NSString * const FasTApiPlacedOrderNotification;
+FOUNDATION_EXPORT NSString * const FasTApiUpdatedOrdersNotification;
+
 typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 
 @class FasTEvent;

@@ -54,7 +54,7 @@ static FasTTicketPrinter *sharedPrinter = nil;
 
 + (id)allocWithZone:(NSZone *)zone
 {
-    return [self sharedPrinter];
+    return [[self sharedPrinter] retain];
 }
 
 - (id)init

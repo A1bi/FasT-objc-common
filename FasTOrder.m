@@ -29,7 +29,8 @@
         NSMutableArray *tmpTickets = [NSMutableArray array];
         for (NSDictionary *ticketInfo in info[@"tickets"]) {
             FasTEventDate *d = [event objectFromArray:@"dates" withId:ticketInfo[@"dateId"] usingIdName:@"date"];
-            [tmpTickets addObject:[[FasTTicket alloc] initWithInfo:ticketInfo date:d order:self]];
+            FasTTicket *ticket = [[[FasTTicket alloc] initWithInfo:ticketInfo date:d order:self] autorelease];
+            [tmpTickets addObject:ticket];
         }
         tickets = [[NSArray arrayWithArray:tmpTickets] retain];
     }
