@@ -61,11 +61,11 @@ static FasTTicketPrinter *sharedPrinter = nil;
 {
     self = [super init];
     if (self) {
-        ticketWidth = 595, ticketHeight = 240;
+        ticketWidth = 595, ticketHeight = 280;
         
         NSString *fontName = @"Avenir";
         NSMutableDictionary *tmpFonts = [NSMutableDictionary dictionary];
-        NSDictionary *fontSizes = @{@"normal": @(16), @"small": @(13), @"tiny": @(11)};
+        NSDictionary *fontSizes = @{@"normal": @(18), @"small": @(15), @"tiny": @(12)};
         for (NSString *fontSize in fontSizes) {
             tmpFonts[fontSize] = [UIFont fontWithName:fontName size:[fontSizes[fontSize] floatValue]];
         }
@@ -182,7 +182,7 @@ static FasTTicketPrinter *sharedPrinter = nil;
 
 - (void)drawEventInfoForDate:(FasTEventDate *)date
 {
-    UIFont *eventTitleFont = [UIFont fontWithName:@"SnellRoundhand" size:40];
+    UIFont *eventTitleFont = [UIFont fontWithName:@"Staccato222 BT" size:50];
     CGSize size = [self drawText:[[date event] name] withFont:eventTitleFont];
     posY += size.height + 5;
     
@@ -196,8 +196,8 @@ static FasTTicketPrinter *sharedPrinter = nil;
 
 - (void)drawSeatInfo:(FasTSeat *)seat
 {
-    NSArray *texts = @[[seat blockName], [seat row], [seat number]];
-    NSArray *keys = @[@"block", @"row", @"seat"];
+    NSArray *texts = @[[seat blockName], [seat number]];
+    NSArray *keys = @[@"block", @"seat"];
     [self drawHorizontalArrayOfTexts:[self arrayOfStrings:texts withLocalizedCaptionsFromKeys:keys] withFontSize:@"small" margin:8];
     
     posY -= 25;
@@ -223,15 +223,24 @@ static FasTTicketPrinter *sharedPrinter = nil;
 
 - (void)drawBottomInfoForTicket:(FasTTicket *)ticket
 {
-    [self drawSeparatorWithSize:CGSizeMake(ticketWidth-posX-40, .5)];
-    posY += 4;
-    posX += 5;
-    
     NSArray *texts = @[[ticket number], [[ticket order] number]];
     NSArray *keys = @[@"ticket", @"order"];
     NSMutableArray *strings = [NSMutableArray arrayWithArray:[self arrayOfStrings:texts withLocalizedCaptionsFromKeys:keys]];
     [strings addObject:NSLocalizedStringByKey(@"websiteUrl")];
-    [self drawHorizontalArrayOfTexts:strings withFontSize:@"tiny" margin:15];
+    
+    NSString *fontSize = @"tiny";
+    CGSize textSize = [texts[0] sizeWithFont:fonts[fontSize]];
+    CGFloat sepHeight = .5,
+            topTextMargin = 4,
+            margin = 10,
+            height = sepHeight + topTextMargin + margin + textSize.height;
+    
+    posY = ticketHeight - height;
+    [self drawSeparatorWithSize:CGSizeMake(ticketWidth-posX-40, sepHeight)];
+    posY += topTextMargin;
+    posX += 5;
+    
+    [self drawHorizontalArrayOfTexts:strings withFontSize:fontSize margin:15];
 }
 
 - (void)drawSeparatorWithSize:(CGSize)size
