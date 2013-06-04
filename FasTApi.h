@@ -13,6 +13,10 @@ FOUNDATION_EXPORT NSString * const FasTApiIsReadyNotification;
 FOUNDATION_EXPORT NSString * const FasTApiUpdatedSeatsNotification;
 FOUNDATION_EXPORT NSString * const FasTApiPlacedOrderNotification;
 FOUNDATION_EXPORT NSString * const FasTApiUpdatedOrdersNotification;
+FOUNDATION_EXPORT NSString * const FasTApiOrderExpiredNotification;
+FOUNDATION_EXPORT NSString * const FasTApiDisconnectedNotification;
+FOUNDATION_EXPORT NSString * const FasTApiAboutToExpireNotification;
+FOUNDATION_EXPORT NSString * const FasTApiCannotConnectNotification;
 
 typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 

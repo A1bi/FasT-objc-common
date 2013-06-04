@@ -16,6 +16,10 @@ NSString * const FasTApiIsReadyNotification = @"FasTApiIsReadyNotification";
 NSString * const FasTApiUpdatedSeatsNotification = @"FasTApiUpdatedSeatsNotification";
 NSString * const FasTApiPlacedOrderNotification = @"FasTApiPlacedOrderNotification";
 NSString * const FasTApiUpdatedOrdersNotification = @"FasTApiUpdatedOrdersNotification";
+NSString * const FasTApiOrderExpiredNotification = @"FasTApiOrderExpiredNotification";
+NSString * const FasTApiDisconnectedNotification = @"FasTApiDisconnectedNotification";
+NSString * const FasTApiAboutToExpireNotification = @"FasTApiAboutToExpireNotification";
+NSString * const FasTApiCannotConnectNotification = @"FasTApiCannotConnectNotification";
 
 static FasTApi *defaultApi = nil;
 static NSString *kApiUrl = @"fast.albisigns";
@@ -27,6 +31,8 @@ static NSString *kApiUrl = @"fast.albisigns";
 - (void)connectToNode;
 - (void)postNotificationWithName:(NSString *)name info:(NSDictionary *)info;
 - (void)initConnections;
+- (void)disconnect;
+- (void)scheduleReconnect;
 - (void)initEventWithInfo:(NSDictionary *)info;
 - (void)updateOrdersWithArray:(NSDictionary *)info;
 
@@ -62,6 +68,10 @@ static NSString *kApiUrl = @"fast.albisigns";
         
         sIO = [[SocketIO alloc] initWithDelegate:self];
         [sIO setResource:@"node"];
+        
+        NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+        [center addObserver:self selector:@selector(disconnect) name:UIApplicationDidEnterBackgroundNotification object:nil];
+        [center addObserver:self selector:@selector(initConnections) name:UIApplicationWillEnterForegroundNotification object:nil];
 	}
 	
 	return self;
@@ -108,7 +118,27 @@ static NSString *kApiUrl = @"fast.albisigns";
     
     } else if ([[packet name] isEqualToString:@"updateOrders"]) {
         [self updateOrdersWithArray:info];
+        
+    } else if ([[packet name] isEqualToString:@"expired"]) {
+        [self postNotificationWithName:FasTApiOrderExpiredNotification info:nil];
+        
+    } else if ([[packet name] isEqualToString:@"aboutToExpire"]) {
+        [self postNotificationWithName:FasTApiAboutToExpireNotification info:info];
     }
+}
+
+- (void)socketIODidDisconnect:(SocketIO *)socket disconnectedWithError:(NSError *)error
+{
+    [self postNotificationWithName:FasTApiDisconnectedNotification info:nil];
+    
+    [self scheduleReconnect];
+}
+
+- (void)socketIO:(SocketIO *)socket onError:(NSError *)error
+{
+    [self postNotificationWithName:FasTApiCannotConnectNotification info:nil];
+    
+    [self scheduleReconnect];
 }
 
 #pragma mark - rails api methods
@@ -186,10 +216,22 @@ static NSString *kApiUrl = @"fast.albisigns";
 
 - (void)initConnections
 {
+    if (!clientType) return;
+    
     [self getResource:@"events" withAction:@"current" callback:^(NSDictionary *response) {
         [self initEventWithInfo:response];
         [self connectToNode];
     }];
+}
+
+- (void)disconnect
+{
+    [sIO disconnect];
+}
+
+- (void)scheduleReconnect
+{
+    [self performSelector:@selector(initConnections) withObject:nil afterDelay:5];
 }
 
 - (void)initEventWithInfo:(NSDictionary *)info
