@@ -10,9 +10,9 @@
 #import "FasTSeatView.h"
 #import "FasTSeat.h"
 
-static int      kMaxCellsX = 115;
+static int      kMaxCellsX = 100;
 static int      kMaxCellsY = 60;
-static float    kSizeFactorsX = 3.5;
+static float    kSizeFactorsX = 3;
 static float    kSizeFactorsY = 3;
 
 @interface FasTSeatingView ()
@@ -29,9 +29,24 @@ static float    kSizeFactorsY = 3;
 {
     self = [super initWithCoder:aDecoder];
     if (self) {
+        CGFloat stageHeight = self.frame.size.height * .1, margin = 10;
+        CGRect frame = CGRectMake(margin, self.frame.size.height - stageHeight, self.frame.size.width - margin * 2, stageHeight);
+        UIView *stageView = [[[UIView alloc] initWithFrame:frame] autorelease];
+        [stageView setBackgroundColor:[UIColor blueColor]];
+        [self addSubview:stageView];
+        
+        frame.origin.x = 0, frame.origin.y = 0;
+        UILabel *stageLabel = [[[UILabel alloc] initWithFrame:frame] autorelease];
+        [stageLabel setBackgroundColor:[UIColor clearColor]];
+        [stageLabel setTextColor:[UIColor whiteColor]];
+        [stageLabel setFont:[UIFont boldSystemFontOfSize:20]];
+        [stageLabel setText:NSLocalizedStringByKey(@"stage")];
+        [stageLabel setTextAlignment:NSTextAlignmentCenter];
+        [stageView addSubview:stageLabel];
+        
 		seatViews = [[NSMutableDictionary dictionary] retain];
         
-        grid = [@[ @(self.frame.size.width / kMaxCellsX), @(self.frame.size.height / kMaxCellsY) ] retain];
+        grid = [@[ @(self.frame.size.width / (kMaxCellsX + 1)), @((self.frame.size.height - stageHeight) / (kMaxCellsY + 1)) ] retain];
         
         sizes = [@[ @([grid[0] floatValue] * kSizeFactorsX), @([grid[1] floatValue] * kSizeFactorsY) ] retain];
     }

@@ -7,6 +7,7 @@
 //
 
 #import "FasTSeatView.h"
+#import <QuartzCore/QuartzCore.h>
 
 @interface FasTSeatView ()
 
@@ -27,6 +28,9 @@
 		
 		UITapGestureRecognizer *tapRecognizer = [[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped)] autorelease];
 		[self addGestureRecognizer:tapRecognizer];
+        
+        self.layer.borderColor = [UIColor grayColor].CGColor;
+        self.layer.borderWidth = 1;
     }
     return self;
 }
