@@ -10,10 +10,10 @@
 #import "FasTSeatView.h"
 #import "FasTSeat.h"
 
-static int      kMaxCellsX = 100;
-static int      kMaxCellsY = 60;
-static float    kSizeFactorsX = 3;
-static float    kSizeFactorsY = 3;
+static int      kMaxCellsX = 185;
+static int      kMaxCellsY = 75;
+static float    kSizeFactorsX = 3.7;
+static float    kSizeFactorsY = 3.7;
 
 @interface FasTSeatingView ()
 
@@ -29,11 +29,25 @@ static float    kSizeFactorsY = 3;
 {
     self = [super initWithCoder:aDecoder];
     if (self) {
-        CGFloat stageHeight = self.frame.size.height * .1, margin = 10;
-        CGRect frame = CGRectMake(margin, self.frame.size.height - stageHeight, self.frame.size.width - margin * 2, stageHeight);
-        UIView *stageView = [[[UIView alloc] initWithFrame:frame] autorelease];
+        CGSize scrollSize = CGSizeMake(self.bounds.size.width * 1.8, self.bounds.size.height);
+        scrollView = [[[UIScrollView alloc] initWithFrame:self.bounds] autorelease];
+        [scrollView setContentSize:scrollSize];
+        [scrollView setMinimumZoomScale:1];
+        [scrollView setMaximumZoomScale:1.5];
+        [scrollView setDelegate:self];
+        [self addSubview:scrollView];
+        
+        CGRect frame;
+        frame.size = scrollSize;
+        frame.origin = CGPointZero;
+        seatsView = [[[UIView alloc] initWithFrame:frame] autorelease];
+        [scrollView addSubview:seatsView];
+        
+        CGFloat stageHeight = scrollSize.height * .1, margin = 0;
+        frame = CGRectMake(margin, scrollSize.height - stageHeight, scrollSize.width - margin * 2, stageHeight);
+        stageView = [[UIView alloc] initWithFrame:frame];
         [stageView setBackgroundColor:[UIColor blueColor]];
-        [self addSubview:stageView];
+        [scrollView addSubview:stageView];
         
         frame.origin.x = 0, frame.origin.y = 0;
         UILabel *stageLabel = [[[UILabel alloc] initWithFrame:frame] autorelease];
@@ -46,8 +60,8 @@ static float    kSizeFactorsY = 3;
         
 		seatViews = [[NSMutableDictionary dictionary] retain];
         
-        grid = [@[ @(self.frame.size.width / (kMaxCellsX + 1)), @((self.frame.size.height - stageHeight) / (kMaxCellsY + 1)) ] retain];
-        
+        scrollSize.height *= .9;
+        grid = [@[ @(scrollSize.width / kMaxCellsX), @(scrollSize.height / kMaxCellsY) ] retain];
         sizes = [@[ @([grid[0] floatValue] * kSizeFactorsX), @([grid[1] floatValue] * kSizeFactorsY) ] retain];
     }
     return self;
@@ -80,7 +94,7 @@ static float    kSizeFactorsY = 3;
 	FasTSeatView *seatView = [[[FasTSeatView alloc] initWithFrame:frame seatId:[seat seatId]] autorelease];
     [seatView setDelegate:[self delegate]];
     seatViews[[seat seatId]] = seatView;
-	[self addSubview:seatView];
+	[seatsView addSubview:seatView];
     
     return seatView;
 }
@@ -90,7 +104,30 @@ static float    kSizeFactorsY = 3;
     [grid release];
     [sizes release];
     [seatViews release];
+    [stageView release];
+    [scrollView release];
+    [seatsView release];
     [super dealloc];
+}
+
+#pragma mark scroll view delegate
+
+- (UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView
+{
+    return seatsView;
+}
+
+- (void)scrollViewDidEndZooming:(UIScrollView *)scrollView withView:(UIView *)view atScale:(float)scale
+{
+    
+}
+
+- (void)scrollViewDidZoom:(UIScrollView *)s
+{
+    CGRect frame = stageView.frame;
+    frame.size.width = s.contentSize.width;
+    frame.origin.y = s.contentSize.height - frame.size.height;
+    stageView.frame = frame;
 }
 
 @end

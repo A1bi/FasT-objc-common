@@ -17,6 +17,7 @@ NSString * const FasTApiUpdatedSeatsNotification = @"FasTApiUpdatedSeatsNotifica
 NSString * const FasTApiPlacedOrderNotification = @"FasTApiPlacedOrderNotification";
 NSString * const FasTApiUpdatedOrdersNotification = @"FasTApiUpdatedOrdersNotification";
 NSString * const FasTApiOrderExpiredNotification = @"FasTApiOrderExpiredNotification";
+NSString * const FasTApiConnectingNotification = @"FasTApiConnectingNotification";
 NSString * const FasTApiDisconnectedNotification = @"FasTApiDisconnectedNotification";
 NSString * const FasTApiAboutToExpireNotification = @"FasTApiAboutToExpireNotification";
 NSString * const FasTApiCannotConnectNotification = @"FasTApiCannotConnectNotification";
@@ -77,9 +78,10 @@ static NSString *kApiUrl = @"fast.albisigns";
 	return self;
 }
 
-- (void)initWithClientType:(NSString *)ct
+- (void)initWithClientType:(NSString *)ct retailId:(NSString *)rId
 {
 	clientType = [ct retain];
+    retailId = [rId retain];
     
     [self initConnections];
 }
@@ -90,6 +92,7 @@ static NSString *kApiUrl = @"fast.albisigns";
     [sIO release];
     [event release];
     [clientType release];
+    [retailId release];
     [super dealloc];
 }
 
@@ -176,7 +179,7 @@ static NSString *kApiUrl = @"fast.albisigns";
 
 - (void)getOrders
 {
-    [self getResource:@"orders" withAction:@"retail/1" callback:^(NSDictionary *response) {
+    [self getResource:@"orders" withAction:[NSString stringWithFormat:@"retail/%@", retailId] callback:^(NSDictionary *response) {
         [self updateOrdersWithArray:response];
     }];
 }
@@ -203,7 +206,7 @@ static NSString *kApiUrl = @"fast.albisigns";
 - (void)connectToNode
 {
     [sIO setUseSecure:YES];
-    [sIO connectToHost:kApiUrl onPort:0 withParams:@{ @"retailId": @"1" } withNamespace:[NSString stringWithFormat:@"/%@", clientType]];
+    [sIO connectToHost:kApiUrl onPort:0 withParams:@{ @"retailId": retailId } withNamespace:[NSString stringWithFormat:@"/%@", clientType]];
 }
 
 - (void)postNotificationWithName:(NSString *)name info:(NSDictionary *)info
@@ -218,6 +221,7 @@ static NSString *kApiUrl = @"fast.albisigns";
 {
     if (!clientType) return;
     
+    [self postNotificationWithName:FasTApiConnectingNotification info:nil];
     [self getResource:@"events" withAction:@"current" callback:^(NSDictionary *response) {
         [self initEventWithInfo:response];
         [self connectToNode];

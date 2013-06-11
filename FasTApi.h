@@ -14,6 +14,7 @@ FOUNDATION_EXPORT NSString * const FasTApiUpdatedSeatsNotification;
 FOUNDATION_EXPORT NSString * const FasTApiPlacedOrderNotification;
 FOUNDATION_EXPORT NSString * const FasTApiUpdatedOrdersNotification;
 FOUNDATION_EXPORT NSString * const FasTApiOrderExpiredNotification;
+FOUNDATION_EXPORT NSString * const FasTApiConnectingNotification;
 FOUNDATION_EXPORT NSString * const FasTApiDisconnectedNotification;
 FOUNDATION_EXPORT NSString * const FasTApiAboutToExpireNotification;
 FOUNDATION_EXPORT NSString * const FasTApiCannotConnectNotification;
@@ -30,6 +31,7 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
     SocketIO *sIO;
     FasTEvent *event;
     NSString *clientType;
+    NSString *retailId;
 }
 
 @property (nonatomic, retain) FasTEvent *event;
@@ -37,7 +39,7 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 
 + (FasTApi *)defaultApi;
 
-- (void)initWithClientType:(NSString *)clientType;
+- (void)initWithClientType:(NSString *)clientType retailId:(NSString *)rId;
 - (void)getResource:(NSString *)resource withAction:(NSString *)action callback:(FasTApiResponseBlock)callback;
 - (void)postResource:(NSString *)resource withAction:(NSString *)action data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
 - (void)updateOrderWithStep:(NSString *)step info:(NSDictionary *)info callback:(void (^)(NSDictionary *))callback;

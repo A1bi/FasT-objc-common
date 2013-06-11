@@ -18,10 +18,13 @@
 
 @end
 
-@interface FasTSeatingView : UIView
+@interface FasTSeatingView : UIView <UIScrollViewDelegate>
 {
 	NSMutableDictionary *seatViews;
     NSArray *grid, *sizes;
+    
+    UIScrollView *scrollView;
+    UIView *seatsView, *stageView;
 }
 
 @property (nonatomic, assign) IBOutlet id<FasTSeatingViewDelegate> delegate;

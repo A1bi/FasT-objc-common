@@ -13,6 +13,7 @@
 
 - (void)reserve;
 - (void)updateSeat;
+- (void)initSeat;
 
 @end
 
@@ -25,14 +26,27 @@
     self = [super initWithFrame:frame];
     if (self) {
 		seatId = [sId retain];
-		
-		UITapGestureRecognizer *tapRecognizer = [[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped)] autorelease];
-		[self addGestureRecognizer:tapRecognizer];
-        
-        self.layer.borderColor = [UIColor grayColor].CGColor;
-        self.layer.borderWidth = 1;
+		[self initSeat];
     }
     return self;
+}
+
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super initWithCoder:aDecoder];
+    if (self) {
+        [self initSeat];
+    }
+    return self;
+}
+
+- (void)initSeat
+{
+    UITapGestureRecognizer *tapRecognizer = [[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped)] autorelease];
+    [self addGestureRecognizer:tapRecognizer];
+    
+    self.layer.borderColor = [UIColor blackColor].CGColor;
+    self.layer.borderWidth = 1;
 }
 
 - (void)dealloc
@@ -83,7 +97,7 @@
 
 - (void)tapped
 {
-	[self reserve];
+	if (delegate) [self reserve];
 }
 
 @end
