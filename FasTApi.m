@@ -23,7 +23,12 @@ NSString * const FasTApiAboutToExpireNotification = @"FasTApiAboutToExpireNotifi
 NSString * const FasTApiCannotConnectNotification = @"FasTApiCannotConnectNotification";
 
 static FasTApi *defaultApi = nil;
-static NSString *kApiUrl = @"fast.albisigns";
+
+#ifdef DEBUG
+    static NSString *kApiUrl = @"fast.albisigns";
+#else
+    static NSString *kApiUrl = @"theater-kaisersesch.de";
+#endif
 
 @interface FasTApi ()
 
