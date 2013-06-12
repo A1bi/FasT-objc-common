@@ -44,6 +44,7 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 - (void)postResource:(NSString *)resource withAction:(NSString *)action data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
 - (void)updateOrderWithStep:(NSString *)step info:(NSDictionary *)info callback:(void (^)(NSDictionary *))callback;
 - (void)reserveSeatWithId:(NSString *)seatId;
+- (void)resetOrder;
 - (void)getOrders;
 - (void)markOrderAsPaid:(FasTOrder *)order withCallback:(FasTApiResponseBlock)callback;
 

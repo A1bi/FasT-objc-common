@@ -194,6 +194,11 @@ static FasTApi *defaultApi = nil;
     [self postResource:@"orders" withAction:[NSString stringWithFormat:@"%@/mark_paid", [order orderId]] data:nil callback:callback];
 }
 
+- (void)resetOrder
+{
+    [sIO sendEvent:@"resetOrder" withData:nil];
+}
+
 #pragma mark node methods
 
 - (void)updateOrderWithStep:(NSString *)step info:(NSDictionary *)info callback:(void (^)(NSDictionary *))callback

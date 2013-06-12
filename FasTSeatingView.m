@@ -30,7 +30,7 @@ static float    kSizeFactorsY = 3.7;
     self = [super initWithCoder:aDecoder];
     if (self) {
         CGSize scrollSize = CGSizeMake(self.bounds.size.width * 1.8, self.bounds.size.height);
-        scrollView = [[[UIScrollView alloc] initWithFrame:self.bounds] autorelease];
+        scrollView = [[UIScrollView alloc] initWithFrame:self.bounds];
         [scrollView setContentSize:scrollSize];
         [scrollView setMinimumZoomScale:1];
         [scrollView setMaximumZoomScale:1.5];
@@ -40,7 +40,7 @@ static float    kSizeFactorsY = 3.7;
         CGRect frame;
         frame.size = scrollSize;
         frame.origin = CGPointZero;
-        seatsView = [[[UIView alloc] initWithFrame:frame] autorelease];
+        seatsView = [[UIView alloc] initWithFrame:frame];
         [scrollView addSubview:seatsView];
         
         CGFloat stageHeight = scrollSize.height * .1, margin = 0;
