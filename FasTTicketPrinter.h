@@ -16,7 +16,7 @@
 @interface FasTTicketPrinter : NSObject
 {
     CGFloat posX, posY;
-    CGFloat ticketWidth, ticketHeight;
+    CGFloat ticketWidth, ticketHeight, ticketMargin, ticketMarginRight;
     CGContextRef context;
     NSDictionary *fonts;
     NSString *ticketsPath;

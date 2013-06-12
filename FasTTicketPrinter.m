@@ -28,7 +28,7 @@ static FasTTicketPrinter *sharedPrinter = nil;
 - (void)generatePDFWithOrder:(FasTOrder *)order;
 - (void)generateTicket:(FasTTicket *)ticket;
 - (void)drawBarcodeForTicket:(FasTTicket *)ticket;
-- (void)drawLogo;
+- (void)drawHeader;
 - (void)drawEventInfoForDate:(FasTEventDate *)date;
 - (void)drawSeatInfo:(FasTSeat *)seat;
 - (void)drawTicketTypeInfo:(FasTTicketType *)type;
@@ -61,11 +61,11 @@ static FasTTicketPrinter *sharedPrinter = nil;
 {
     self = [super init];
     if (self) {
-        ticketWidth = 595, ticketHeight = 280;
+        ticketWidth = 595, ticketHeight = 280, ticketMargin = 10, ticketMarginRight = 30;
         
         NSString *fontName = @"Avenir";
         NSMutableDictionary *tmpFonts = [NSMutableDictionary dictionary];
-        NSDictionary *fontSizes = @{@"normal": @(18), @"small": @(15), @"tiny": @(12)};
+        NSDictionary *fontSizes = @{@"normal": @(17), @"small": @(14), @"tiny": @(11)};
         for (NSString *fontSize in fontSizes) {
             tmpFonts[fontSize] = [UIFont fontWithName:fontName size:[fontSizes[fontSize] floatValue]];
         }
@@ -141,7 +141,7 @@ static FasTTicketPrinter *sharedPrinter = nil;
     CGContextRotateCTM(context, kRotationRadians);
     
     [self drawBarcodeForTicket:ticket];
-    [self drawLogo];
+    [self drawHeader];
     [self drawEventInfoForDate:[ticket date]];
     [self drawSeatInfo:[ticket seat]];
     [self drawTicketTypeInfo:[ticket type]];
@@ -150,39 +150,47 @@ static FasTTicketPrinter *sharedPrinter = nil;
 
 - (void)drawBarcodeForTicket:(FasTTicket *)ticket
 {
-    CGFloat margin = 10,
-            height = 60, width = ticketHeight - margin * 2;
+    CGFloat height = 60, width = ticketHeight - ticketMargin * 2;
     
-    posX = margin;
-    posY = margin;
+    posX = ticketMargin;
+    posY = ticketMargin;
     
     CGContextSaveGState(context);
-    CGContextTranslateCTM(context, posX + height + margin, 0);
+    CGContextTranslateCTM(context, posX + height + ticketMargin, 0);
     CGContextRotateCTM(context, -kRotationRadians);
     
     NSString *content = [NSString stringWithFormat:@"T%@M0", [ticket number]];
     [FasTBarcode3of9 drawInRect:CGRectMake(posX, posY, width, height) withContent:content];
     
     CGContextRestoreGState(context);
-    posX = margin + height + margin;
+    posX = height + ticketMargin * 2;
     
     [self drawSeparatorWithSize:CGSizeMake(.5, ticketHeight - posY * 2)];
     posX += 30;
     posY += 4;
 }
 
-- (void)drawLogo
+- (void)drawHeader
 {
-    UIImage *logo = [UIImage imageNamed:@"logo.png"];
-    CGSize size = [logo size];
-    CGFloat width = 100, margin = 20;
-    CGRect logoRect = CGRectMake(ticketWidth - width - margin, margin, width, size.height / size.width * width);
-    [logo drawInRect:logoRect];
+    NSString *originalText = NSLocalizedStringByKey(@"ticketHeader");
+    UIFont *font = fonts[@"small"];
+    NSAttributedString *text = [[NSAttributedString alloc] initWithString:originalText attributes:@{NSKernAttributeName: @(1.2), NSFontAttributeName: font}];
+    CGSize size = [text size];
+    CGFloat width = ticketWidth - posX - ticketMarginRight,
+            startPoint = posX + width / 2 - size.width / 2,
+            margin = 10;
+    [text drawAtPoint:CGPointMake(startPoint, posY)];
+    
+    CGFloat lineY = posY + size.height / 2, lineWidth = .5, lineLength = startPoint - posX - margin;
+    CGContextFillRect(context, CGRectMake(posX, lineY, lineLength, lineWidth));
+    CGContextFillRect(context, CGRectMake(startPoint + size.width + margin, lineY, lineLength, lineWidth));
+    
+    posY += size.height + 5;
 }
 
 - (void)drawEventInfoForDate:(FasTEventDate *)date
 {
-    UIFont *eventTitleFont = [UIFont fontWithName:@"Staccato222 BT" size:50];
+    UIFont *eventTitleFont = [UIFont fontWithName:@"Staccato222 BT" size:40];
     CGSize size = [self drawText:[[date event] name] withFont:eventTitleFont];
     posY += size.height + 5;
     
@@ -232,11 +240,10 @@ static FasTTicketPrinter *sharedPrinter = nil;
     CGSize textSize = [texts[0] sizeWithFont:fonts[fontSize]];
     CGFloat sepHeight = .5,
             topTextMargin = 4,
-            margin = 10,
-            height = sepHeight + topTextMargin + margin + textSize.height;
+            height = sepHeight + topTextMargin + ticketMargin + textSize.height;
     
     posY = ticketHeight - height;
-    [self drawSeparatorWithSize:CGSizeMake(ticketWidth-posX-40, sepHeight)];
+    [self drawSeparatorWithSize:CGSizeMake(ticketWidth - posX - ticketMarginRight, sepHeight)];
     posY += topTextMargin;
     posX += 5;
     
