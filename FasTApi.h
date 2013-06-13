@@ -32,6 +32,7 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
     FasTEvent *event;
     NSString *clientType;
     NSString *retailId;
+    BOOL inHibernation;
 }
 
 @property (nonatomic, retain) FasTEvent *event;

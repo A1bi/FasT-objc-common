@@ -75,6 +75,8 @@ static FasTApi *defaultApi = nil;
         sIO = [[SocketIO alloc] initWithDelegate:self];
         [sIO setResource:@"node"];
         
+        inHibernation = YES;
+        
         NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
         [center addObserver:self selector:@selector(disconnect) name:UIApplicationDidEnterBackgroundNotification object:nil];
         [center addObserver:self selector:@selector(initConnections) name:UIApplicationWillEnterForegroundNotification object:nil];
@@ -137,6 +139,8 @@ static FasTApi *defaultApi = nil;
 
 - (void)socketIODidDisconnect:(SocketIO *)socket disconnectedWithError:(NSError *)error
 {
+    if (inHibernation) return;
+    
     [self postNotificationWithName:FasTApiDisconnectedNotification info:nil];
     
     [self scheduleReconnect];
@@ -231,7 +235,8 @@ static FasTApi *defaultApi = nil;
 {
     if (!clientType) return;
     
-    [self postNotificationWithName:FasTApiConnectingNotification info:nil];
+    if (inHibernation) [self postNotificationWithName:FasTApiConnectingNotification info:nil];
+    inHibernation = NO;
     [self getResource:@"events" withAction:@"current" callback:^(NSDictionary *response) {
         [self initEventWithInfo:response];
         [self connectToNode];
@@ -240,6 +245,7 @@ static FasTApi *defaultApi = nil;
 
 - (void)disconnect
 {
+    inHibernation = YES;
     [sIO disconnect];
 }
 
