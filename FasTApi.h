@@ -49,6 +49,5 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 - (void)resetOrder;
 - (void)getOrders;
 - (void)markOrderAsPaid:(FasTOrder *)order withCallback:(FasTApiResponseBlock)callback;
-- (void)abort;
 
 @end

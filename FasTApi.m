@@ -147,7 +147,6 @@ static FasTApi *defaultApi = nil;
 - (void)socketIODidDisconnect:(SocketIO *)socket disconnectedWithError:(NSError *)error
 {
     [self killAbortTimer];
-    
     if (inHibernation) return;
     
     [self postNotificationWithName:FasTApiDisconnectedNotification info:nil];
@@ -158,6 +157,7 @@ static FasTApi *defaultApi = nil;
 - (void)socketIO:(SocketIO *)socket onError:(NSError *)error
 {
     [self killAbortTimer];
+    if (inHibernation) return;
     
     [self postNotificationWithName:FasTApiCannotConnectNotification info:nil];
     
@@ -260,18 +260,14 @@ static FasTApi *defaultApi = nil;
 - (void)disconnect
 {
     inHibernation = YES;
-    [sIO disconnect];
-}
-
-- (void)abort
-{
     [netEngine cancelAllOperations];
     [sIO disconnect];
 }
 
 - (void)abortAndReconnect
 {
-    [self abort];
+    [self disconnect];
+    inHibernation = NO;
     [self scheduleReconnect];
     
     [self postNotificationWithName:FasTApiCannotConnectNotification info:nil];
