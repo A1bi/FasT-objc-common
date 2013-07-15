@@ -33,6 +33,7 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
     NSString *clientType;
     NSString *retailId;
     BOOL inHibernation;
+    NSTimer *timeOutTimer;
 }
 
 @property (nonatomic, retain) FasTEvent *event;
@@ -48,5 +49,6 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 - (void)resetOrder;
 - (void)getOrders;
 - (void)markOrderAsPaid:(FasTOrder *)order withCallback:(FasTApiResponseBlock)callback;
+- (void)abort;
 
 @end

@@ -25,10 +25,12 @@ NSString * const FasTApiCannotConnectNotification = @"FasTApiCannotConnectNotifi
 static FasTApi *defaultApi = nil;
 
 #ifdef DEBUG
-    static NSString *kApiUrl = @"fast.albisigns";
+    static NSString *kFasTApiUrl = @"fast.albisigns";
 #else
-    static NSString *kApiUrl = @"theater-kaisersesch.de";
+    static NSString *kFasTApiUrl = @"theater-kaisersesch.de";
 #endif
+
+#define kFasTApiTimeOut 10
 
 @interface FasTApi ()
 
@@ -39,6 +41,8 @@ static FasTApi *defaultApi = nil;
 - (void)initConnections;
 - (void)disconnect;
 - (void)scheduleReconnect;
+- (void)abortAndReconnect;
+- (void)killAbortTimer;
 - (void)initEventWithInfo:(NSDictionary *)info;
 - (void)updateOrdersWithArray:(NSDictionary *)info;
 
@@ -70,7 +74,7 @@ static FasTApi *defaultApi = nil;
 	
 	self = [super init];
 	if (self) {
-        netEngine = [[MKNetworkEngine alloc] initWithHostName:kApiUrl];
+        netEngine = [[MKNetworkEngine alloc] initWithHostName:kFasTApiUrl];
         
         sIO = [[SocketIO alloc] initWithDelegate:self];
         [sIO setResource:@"node"];
@@ -100,6 +104,7 @@ static FasTApi *defaultApi = nil;
     [event release];
     [clientType release];
     [retailId release];
+    [timeOutTimer release];
     [super dealloc];
 }
 
@@ -107,6 +112,8 @@ static FasTApi *defaultApi = nil;
 
 - (void)socketIODidConnect:(SocketIO *)socket
 {
+    [self killAbortTimer];
+    
     [self postNotificationWithName:FasTApiIsReadyNotification info:nil];
 }
 
@@ -139,6 +146,8 @@ static FasTApi *defaultApi = nil;
 
 - (void)socketIODidDisconnect:(SocketIO *)socket disconnectedWithError:(NSError *)error
 {
+    [self killAbortTimer];
+    
     if (inHibernation) return;
     
     [self postNotificationWithName:FasTApiDisconnectedNotification info:nil];
@@ -148,6 +157,8 @@ static FasTApi *defaultApi = nil;
 
 - (void)socketIO:(SocketIO *)socket onError:(NSError *)error
 {
+    [self killAbortTimer];
+    
     [self postNotificationWithName:FasTApiCannotConnectNotification info:nil];
     
     [self scheduleReconnect];
@@ -220,7 +231,7 @@ static FasTApi *defaultApi = nil;
 - (void)connectToNode
 {
     [sIO setUseSecure:YES];
-    [sIO connectToHost:kApiUrl onPort:0 withParams:@{ @"retailId": retailId } withNamespace:[NSString stringWithFormat:@"/%@", clientType]];
+    [sIO connectToHost:kFasTApiUrl onPort:0 withParams:@{ @"retailId": retailId } withNamespace:[NSString stringWithFormat:@"/%@", clientType]];
 }
 
 - (void)postNotificationWithName:(NSString *)name info:(NSDictionary *)info
@@ -235,6 +246,9 @@ static FasTApi *defaultApi = nil;
 {
     if (!clientType) return;
     
+    [timeOutTimer release];
+    timeOutTimer = [[NSTimer scheduledTimerWithTimeInterval:kFasTApiTimeOut target:self selector:@selector(abortAndReconnect) userInfo:nil repeats:NO] retain];
+    
     if (inHibernation) [self postNotificationWithName:FasTApiConnectingNotification info:nil];
     inHibernation = NO;
     [self getResource:@"events" withAction:@"current" callback:^(NSDictionary *response) {
@@ -247,6 +261,25 @@ static FasTApi *defaultApi = nil;
 {
     inHibernation = YES;
     [sIO disconnect];
+}
+
+- (void)abort
+{
+    [netEngine cancelAllOperations];
+    [sIO disconnect];
+}
+
+- (void)abortAndReconnect
+{
+    [self abort];
+    [self scheduleReconnect];
+    
+    [self postNotificationWithName:FasTApiCannotConnectNotification info:nil];
+}
+
+- (void)killAbortTimer
+{
+    [timeOutTimer invalidate];
 }
 
 - (void)scheduleReconnect
