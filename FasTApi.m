@@ -42,7 +42,7 @@ static FasTApi *defaultApi = nil;
 - (void)disconnect;
 - (void)scheduleReconnect;
 - (void)abortAndReconnect;
-- (void)killAbortTimer;
+- (void)killScheduledTasks;
 - (void)initEventWithInfo:(NSDictionary *)info;
 - (void)updateOrdersWithArray:(NSDictionary *)info;
 - (void)appWillResignActive;
@@ -106,7 +106,6 @@ static FasTApi *defaultApi = nil;
     [event release];
     [clientType release];
     [retailId release];
-    [timeOutTimer release];
     [super dealloc];
 }
 
@@ -114,7 +113,7 @@ static FasTApi *defaultApi = nil;
 
 - (void)socketIODidConnect:(SocketIO *)socket
 {
-    [self killAbortTimer];
+    [self killScheduledTasks];
     
     [self postNotificationWithName:FasTApiIsReadyNotification info:nil];
 }
@@ -134,7 +133,7 @@ static FasTApi *defaultApi = nil;
         
     } else if ([[packet name] isEqualToString:@"orderPlaced"]) {
         [self postNotificationWithName:FasTApiPlacedOrderNotification info:info];
-    
+        
     } else if ([[packet name] isEqualToString:@"updateOrders"]) {
         [self updateOrdersWithArray:info];
         
@@ -148,7 +147,7 @@ static FasTApi *defaultApi = nil;
 
 - (void)socketIODidDisconnect:(SocketIO *)socket disconnectedWithError:(NSError *)error
 {
-    [self killAbortTimer];
+    [self killScheduledTasks];
     if (inHibernation) return;
     
     [self postNotificationWithName:FasTApiDisconnectedNotification info:nil];
@@ -158,7 +157,7 @@ static FasTApi *defaultApi = nil;
 
 - (void)socketIO:(SocketIO *)socket onError:(NSError *)error
 {
-    [self killAbortTimer];
+    [self killScheduledTasks];
     if (inHibernation) return;
     
     [self postNotificationWithName:FasTApiCannotConnectNotification info:nil];
@@ -248,8 +247,8 @@ static FasTApi *defaultApi = nil;
 {
     if (!clientType) return;
     
-    [timeOutTimer release];
-    timeOutTimer = [[NSTimer scheduledTimerWithTimeInterval:kFasTApiTimeOut target:self selector:@selector(abortAndReconnect) userInfo:nil repeats:NO] retain];
+    [self killScheduledTasks];
+    [self performSelector:@selector(abortAndReconnect) withObject:nil afterDelay:kFasTApiTimeOut];
     
     if (inHibernation) [self postNotificationWithName:FasTApiConnectingNotification info:nil];
     inHibernation = NO;
@@ -275,9 +274,9 @@ static FasTApi *defaultApi = nil;
     [self postNotificationWithName:FasTApiCannotConnectNotification info:nil];
 }
 
-- (void)killAbortTimer
+- (void)killScheduledTasks
 {
-    [timeOutTimer invalidate];
+    [NSObject cancelPreviousPerformRequestsWithTarget:self];
 }
 
 - (void)scheduleReconnect
@@ -304,8 +303,7 @@ static FasTApi *defaultApi = nil;
 
 - (void)appWillResignActive
 {
-    [self killAbortTimer];
-    [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    [self killScheduledTasks];
 }
 
 @end
