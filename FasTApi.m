@@ -45,6 +45,7 @@ static FasTApi *defaultApi = nil;
 - (void)killAbortTimer;
 - (void)initEventWithInfo:(NSDictionary *)info;
 - (void)updateOrdersWithArray:(NSDictionary *)info;
+- (void)appWillResignActive;
 
 @end
 
@@ -82,6 +83,7 @@ static FasTApi *defaultApi = nil;
         inHibernation = YES;
         
         NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+        [center addObserver:self selector:@selector(appWillResignActive) name:UIApplicationWillResignActiveNotification object:nil];
         [center addObserver:self selector:@selector(disconnect) name:UIApplicationDidEnterBackgroundNotification object:nil];
         [center addObserver:self selector:@selector(initConnections) name:UIApplicationWillEnterForegroundNotification object:nil];
 	}
@@ -298,6 +300,12 @@ static FasTApi *defaultApi = nil;
     }
     
     [self postNotificationWithName:FasTApiUpdatedOrdersNotification info:@{ @"orders": [NSArray arrayWithArray:orders] }];
+}
+
+- (void)appWillResignActive
+{
+    [self killAbortTimer];
+    [NSObject cancelPreviousPerformRequestsWithTarget:self];
 }
 
 @end
