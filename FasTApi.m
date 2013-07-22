@@ -14,12 +14,10 @@
 
 NSString * const FasTApiIsReadyNotification = @"FasTApiIsReadyNotification";
 NSString * const FasTApiUpdatedSeatsNotification = @"FasTApiUpdatedSeatsNotification";
-NSString * const FasTApiPlacedOrderNotification = @"FasTApiPlacedOrderNotification";
 NSString * const FasTApiUpdatedOrdersNotification = @"FasTApiUpdatedOrdersNotification";
 NSString * const FasTApiOrderExpiredNotification = @"FasTApiOrderExpiredNotification";
 NSString * const FasTApiConnectingNotification = @"FasTApiConnectingNotification";
 NSString * const FasTApiDisconnectedNotification = @"FasTApiDisconnectedNotification";
-NSString * const FasTApiAboutToExpireNotification = @"FasTApiAboutToExpireNotification";
 NSString * const FasTApiCannotConnectNotification = @"FasTApiCannotConnectNotification";
 
 static FasTApi *defaultApi = nil;
@@ -128,20 +126,18 @@ static FasTApi *defaultApi = nil;
         
         [self postNotificationWithName:FasTApiUpdatedSeatsNotification info:seats];
         
+    } else if ([[packet name] isEqualToString:@"gotSeatingId"]) {
+        [seatingId release];
+        seatingId = [info[@"id"] retain];
+        
     } else if ([[packet name] isEqualToString:@"updateEvent"]) {
         [self initEventWithInfo:info[@"event"]];
-        
-    } else if ([[packet name] isEqualToString:@"orderPlaced"]) {
-        [self postNotificationWithName:FasTApiPlacedOrderNotification info:info];
         
     } else if ([[packet name] isEqualToString:@"updateOrders"]) {
         [self updateOrdersWithArray:info];
         
     } else if ([[packet name] isEqualToString:@"expired"]) {
         [self postNotificationWithName:FasTApiOrderExpiredNotification info:nil];
-        
-    } else if ([[packet name] isEqualToString:@"aboutToExpire"]) {
-        [self postNotificationWithName:FasTApiAboutToExpireNotification info:info];
     }
 }
 
@@ -179,7 +175,7 @@ static FasTApi *defaultApi = nil;
 
 - (void)makeRequestWithResource:(NSString *)resource action:(NSString *)action method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback
 {
-    NSString *path = (action) ? [NSString stringWithFormat:@"/api/%@/%@", resource, action] : [NSString stringWithFormat:@"/%@", resource];
+    NSString *path = (action) ? [NSString stringWithFormat:@"/api/%@/%@", resource, action] : [NSString stringWithFormat:@"/api/%@", resource];
     [self makeRequestWithPath:path method:method data:data callback:callback];
 }
 
@@ -193,9 +189,21 @@ static FasTApi *defaultApi = nil;
         
 	} errorHandler:^(MKNetworkOperation *completedOperation, NSError* error) {
 		NSLog(@"%@", error);
+        if (callback) callback(nil);
 	}];
 	
 	[netEngine enqueueOperation:op];
+}
+
+- (void)placeOrderWithInfo:(NSDictionary *)info callback:(FasTApiResponseBlock)callback
+{
+    NSMutableDictionary *orderInfo = [NSMutableDictionary dictionaryWithDictionary:info];
+    orderInfo[@"seatingId"] = seatingId;
+    NSDictionary *data = @{
+        @"order": orderInfo,
+        @"retailId": retailId
+    };
+    [self postResource:@"orders" withAction:nil data:data callback:callback];
 }
 
 - (void)getOrders
@@ -210,38 +218,38 @@ static FasTApi *defaultApi = nil;
     [self postResource:@"orders" withAction:[NSString stringWithFormat:@"%@/mark_paid", [order orderId]] data:nil callback:callback];
 }
 
-- (void)resetOrder
+- (void)resetSeating
 {
-    [sIO sendEvent:@"resetOrder" withData:nil];
+    [sIO sendEvent:@"reset" withData:nil];
 }
 
 #pragma mark node methods
 
-- (void)updateOrderWithStep:(NSString *)step info:(NSDictionary *)info callback:(void (^)(NSDictionary *))callback
+- (void)setDate:(NSString *)dateId numberOfSeats:(NSInteger)numberOfSeats callback:(FasTApiResponseBlock)callback
 {
-    NSDictionary *data = @{ @"order": @{ @"step": step, @"info": info } };
-    [sIO sendEvent:@"updateOrder" withData:data andAcknowledge:callback];
+    NSDictionary *data = @{ @"date": dateId, @"numberOfSeats": @(numberOfSeats) };
+    [sIO sendEvent:@"setDateAndNumberOfSeats" withData:data andAcknowledge:callback];
 }
 
-- (void)reserveSeatWithId:(NSString *)seatId
+- (void)chooseSeatWithId:(NSString *)seatId
 {
     NSDictionary *data = @{ @"seatId": seatId };
-    [sIO sendEvent:@"reserveSeat" withData:data];
+    [sIO sendEvent:@"chooseSeat" withData:data];
 }
 
 - (void)connectToNode
 {
     [sIO setUseSecure:YES];
-    [sIO connectToHost:kFasTApiUrl onPort:0 withParams:@{ @"retailId": retailId } withNamespace:[NSString stringWithFormat:@"/%@", clientType]];
+    [sIO connectToHost:kFasTApiUrl onPort:0 withParams:nil withNamespace:[NSString stringWithFormat:@"/%@", clientType]];
 }
+
+#pragma mark class methods
 
 - (void)postNotificationWithName:(NSString *)name info:(NSDictionary *)info
 {
     NSNotification *notification = [NSNotification notificationWithName:name object:self userInfo:info];
     [[NSNotificationCenter defaultCenter] postNotification:notification];
 }
-
-#pragma mark class methods
 
 - (void)initConnections
 {

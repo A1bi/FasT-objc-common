@@ -13,10 +13,12 @@
     float price;
     NSString *name, *info;
     NSString *typeId;
+    BOOL exclusive;
 }
 
 @property (nonatomic, readonly) NSString *name, *info, *typeId;
 @property (nonatomic, readonly) float price;
+@property (nonatomic, readonly) BOOL exclusive;
 
 - (id)initWithInfo:(NSDictionary *)info;
 

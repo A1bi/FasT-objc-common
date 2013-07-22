@@ -75,10 +75,10 @@ static float    kSizeFactorsY = 3.7;
     }
     
     FasTSeatViewState newState = FasTSeatViewStateAvailable;
-    if ([seat selected]) {
-        newState = FasTSeatViewStateSelected;
-    } else if ([seat reserved]) {
-        newState = FasTSeatViewStateReserved;
+    if ([seat chosen]) {
+        newState = FasTSeatViewStateChosen;
+    } else if ([seat taken]) {
+        newState = FasTSeatViewStateTaken;
     }
     [seatView setState:newState];
 }

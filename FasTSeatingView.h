@@ -14,7 +14,7 @@
 
 @protocol FasTSeatingViewDelegate <NSObject>
 
-- (void)didSelectSeatView:(FasTSeatView *)seatView;
+- (void)didChooseSeatView:(FasTSeatView *)seatView;
 
 @end
 

@@ -41,7 +41,7 @@
             seats[[date dateId]] = dateSeats;
             
             for (NSDictionary *seatInfo in info[@"seats"]) {
-                FasTSeat *seat = [[FasTSeat alloc] initWithInfo:seatInfo reserved:[seatInfo[@"reserved"][[date dateId]] boolValue]];
+                FasTSeat *seat = [[FasTSeat alloc] initWithInfo:seatInfo];
                 dateSeats[[seat seatId]] = seat;
                 [seat release];
             }

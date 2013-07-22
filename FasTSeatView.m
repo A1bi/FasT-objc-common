@@ -11,7 +11,7 @@
 
 @interface FasTSeatView ()
 
-- (void)reserve;
+- (void)choose;
 - (void)updateSeat;
 - (void)initSeat;
 
@@ -57,12 +57,12 @@
 
 #pragma mark class methods
 
-- (void)reserve
+- (void)choose
 {
     if (state == FasTSeatViewStateAvailable) {
-        [self setState:FasTSeatViewStateSelected];
+        [self setState:FasTSeatViewStateChosen];
         
-        [[self delegate] didSelectSeatView:self];
+        [[self delegate] didChooseSeatView:self];
     }
 }
 
@@ -76,11 +76,11 @@
 {
     NSString *colorName;
     switch (state) {
-        case FasTSeatViewStateSelected:
+        case FasTSeatViewStateChosen:
             colorName = @"yellow";
             break;
             
-        case FasTSeatViewStateReserved:
+        case FasTSeatViewStateTaken:
             colorName = @"red";
             break;
             
@@ -97,7 +97,7 @@
 
 - (void)tapped
 {
-	if (delegate) [self reserve];
+	if (delegate) [self choose];
 }
 
 @end

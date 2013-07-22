@@ -10,9 +10,9 @@
 
 @implementation FasTSeat
 
-@synthesize seatId, number, row, blockName, posX, posY, reserved, selected;
+@synthesize seatId, number, row, blockName, posX, posY, taken, chosen;
 
-- (id)initWithInfo:(NSDictionary *)info reserved:(BOOL)r
+- (id)initWithInfo:(NSDictionary *)info
 {
     self = [super init];
     if (self) {
@@ -20,7 +20,6 @@
         number = [info[@"number"] retain];
         row = [info[@"row"] retain];
         blockName = [info[@"block_name"] retain];
-        reserved = r;
         
         NSDictionary *grid = info[@"grid"];
         posX = [grid[@"x"] intValue];
@@ -40,8 +39,8 @@
 
 - (void)updateWithInfo:(NSDictionary *)info
 {
-    reserved = [info[@"reserved"] boolValue];
-    selected = [info[@"selected"] boolValue];
+    taken = [info[@"t"] boolValue];
+    chosen = [info[@"c"] boolValue];
 }
 
 @end

@@ -11,12 +11,10 @@
 
 FOUNDATION_EXPORT NSString * const FasTApiIsReadyNotification;
 FOUNDATION_EXPORT NSString * const FasTApiUpdatedSeatsNotification;
-FOUNDATION_EXPORT NSString * const FasTApiPlacedOrderNotification;
 FOUNDATION_EXPORT NSString * const FasTApiUpdatedOrdersNotification;
 FOUNDATION_EXPORT NSString * const FasTApiOrderExpiredNotification;
 FOUNDATION_EXPORT NSString * const FasTApiConnectingNotification;
 FOUNDATION_EXPORT NSString * const FasTApiDisconnectedNotification;
-FOUNDATION_EXPORT NSString * const FasTApiAboutToExpireNotification;
 FOUNDATION_EXPORT NSString * const FasTApiCannotConnectNotification;
 
 typedef void (^FasTApiResponseBlock)(NSDictionary *response);
@@ -32,6 +30,7 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
     FasTEvent *event;
     NSString *clientType;
     NSString *retailId;
+    NSString *seatingId;
     BOOL inHibernation;
 }
 
@@ -43,9 +42,10 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 - (void)initWithClientType:(NSString *)clientType retailId:(NSString *)rId;
 - (void)getResource:(NSString *)resource withAction:(NSString *)action callback:(FasTApiResponseBlock)callback;
 - (void)postResource:(NSString *)resource withAction:(NSString *)action data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
-- (void)updateOrderWithStep:(NSString *)step info:(NSDictionary *)info callback:(void (^)(NSDictionary *))callback;
-- (void)reserveSeatWithId:(NSString *)seatId;
-- (void)resetOrder;
+- (void)setDate:(NSString *)dateId numberOfSeats:(NSInteger)numberOfSeats callback:(FasTApiResponseBlock)callback;
+- (void)chooseSeatWithId:(NSString *)seatId;
+- (void)resetSeating;
+- (void)placeOrderWithInfo:(NSDictionary *)info callback:(FasTApiResponseBlock)callback;
 - (void)getOrders;
 - (void)markOrderAsPaid:(FasTOrder *)order withCallback:(FasTApiResponseBlock)callback;
 

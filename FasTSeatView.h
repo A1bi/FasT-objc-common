@@ -11,8 +11,8 @@
 
 typedef enum {
     FasTSeatViewStateAvailable,
-    FasTSeatViewStateReserved,
-    FasTSeatViewStateSelected
+    FasTSeatViewStateTaken,
+    FasTSeatViewStateChosen
 } FasTSeatViewState;
 
 @interface FasTSeatView : UIView

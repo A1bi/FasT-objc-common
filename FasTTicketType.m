@@ -11,7 +11,7 @@
 
 @implementation FasTTicketType
 
-@synthesize name, info, typeId, price;
+@synthesize name, info, typeId, price, exclusive;
 
 - (id)initWithInfo:(NSDictionary *)i
 {
@@ -21,6 +21,7 @@
         name = [i[@"name"] retain];
         info = [i[@"info"] retain];
         price = [i[@"price"] floatValue];
+        exclusive = [i[@"exclusive"] boolValue];
     }
     return self;
 }

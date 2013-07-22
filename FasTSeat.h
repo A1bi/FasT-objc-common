@@ -13,15 +13,15 @@
     NSString *seatId;
     NSString *number, *row, *blockName;
     NSInteger posX, posY;
-    BOOL reserved, selected;
+    BOOL taken, chosen;
 }
 
 @property (nonatomic, readonly) NSString *seatId;
 @property (nonatomic, readonly) NSString *number, *row, *blockName;
 @property (nonatomic, readonly) NSInteger posX, posY;
-@property (nonatomic, readonly) BOOL reserved, selected;
+@property (nonatomic, readonly) BOOL taken, chosen;
 
-- (id)initWithInfo:(NSDictionary *)info reserved:(BOOL)reserved;
+- (id)initWithInfo:(NSDictionary *)info;
 - (void)updateWithInfo:(NSDictionary *)info;
 
 @end
