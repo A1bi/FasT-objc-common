@@ -32,11 +32,12 @@ static FasTApi *defaultApi = nil;
 
 @interface FasTApi ()
 
+- (id)initWithClientType:(NSString *)cType clientId:(NSString *)cId;
 - (void)makeRequestWithPath:(NSString *)path method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
 - (void)makeRequestWithResource:(NSString *)resource action:(NSString *)action method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
 - (void)connectToNode;
 - (void)postNotificationWithName:(NSString *)name info:(NSDictionary *)info;
-- (void)initConnections;
+- (void)prepareNodeConnection;
 - (void)disconnect;
 - (void)scheduleReconnect;
 - (void)abortAndReconnect;
@@ -49,15 +50,24 @@ static FasTApi *defaultApi = nil;
 
 @implementation FasTApi
 
-@synthesize event, clientType;
+@synthesize event, clientType, clientId;
 
 + (FasTApi *)defaultApi
 {
 	if (!defaultApi) {
-		defaultApi = [[super allocWithZone:NULL] init];
-	}
+        [NSException raise:@"FasTApiNotInitiatedException" format:@"FasTApi has to be initiated by sending initWithClientType: first."];
+        return nil;
+    }
 	
 	return defaultApi;
+}
+
++ (FasTApi *)defaultApiWithClientType:(NSString *)cType clientId:(NSString *)cId
+{
+    if (!defaultApi) {
+        defaultApi = [[super allocWithZone:NULL] initWithClientType:cType clientId:cId];
+    }
+    return defaultApi;
 }
 
 + (id)allocWithZone:(NSZone *)zone
@@ -67,34 +77,19 @@ static FasTApi *defaultApi = nil;
 
 - (id)init
 {
-    if (defaultApi) {
-		return defaultApi;
-	}
-	
-	self = [super init];
-	if (self) {
-        netEngine = [[MKNetworkEngine alloc] initWithHostName:kFasTApiUrl];
-        
-        sIO = [[SocketIO alloc] initWithDelegate:self];
-        [sIO setResource:@"node"];
-        
-        inHibernation = YES;
-        
-        NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
-        [center addObserver:self selector:@selector(appWillResignActive) name:UIApplicationWillResignActiveNotification object:nil];
-        [center addObserver:self selector:@selector(disconnect) name:UIApplicationDidEnterBackgroundNotification object:nil];
-        [center addObserver:self selector:@selector(initConnections) name:UIApplicationWillEnterForegroundNotification object:nil];
-	}
-	
-	return self;
+    return defaultApi;
 }
 
-- (void)initWithClientType:(NSString *)ct retailId:(NSString *)rId
+- (id)initWithClientType:(NSString *)cType clientId:(NSString *)cId
 {
-	clientType = [ct retain];
-    retailId = [rId retain];
-    
-    [self initConnections];
+    self = [super init];
+    if (self) {
+        netEngine = [[MKNetworkEngine alloc] initWithHostName:kFasTApiUrl];
+        
+        clientType = [cType retain];
+        clientId = [cId retain];
+    }
+    return self;
 }
 
 - (void)dealloc
@@ -103,7 +98,7 @@ static FasTApi *defaultApi = nil;
     [sIO release];
     [event release];
     [clientType release];
-    [retailId release];
+    [clientId release];
     [super dealloc];
 }
 
@@ -195,20 +190,20 @@ static FasTApi *defaultApi = nil;
 	[netEngine enqueueOperation:op];
 }
 
-- (void)placeOrderWithInfo:(NSDictionary *)info callback:(FasTApiResponseBlock)callback
+- (void)placeRetailOrderWithInfo:(NSDictionary *)info callback:(FasTApiResponseBlock)callback
 {
     NSMutableDictionary *orderInfo = [NSMutableDictionary dictionaryWithDictionary:info];
     orderInfo[@"seatingId"] = seatingId;
     NSDictionary *data = @{
         @"order": orderInfo,
-        @"retailId": retailId
+        @"retailId": clientId
     };
     [self postResource:@"orders" withAction:nil data:data callback:callback];
 }
 
-- (void)getOrders
+- (void)getOrdersForRetailStore
 {
-    [self getResource:@"orders" withAction:[NSString stringWithFormat:@"retail/%@", retailId] callback:^(NSDictionary *response) {
+    [self getResource:@"orders" withAction:[NSString stringWithFormat:@"retail/%@", clientId] callback:^(NSDictionary *response) {
         [self updateOrdersWithArray:response];
     }];
 }
@@ -221,6 +216,13 @@ static FasTApi *defaultApi = nil;
 - (void)resetSeating
 {
     [sIO sendEvent:@"reset" withData:nil];
+}
+
+- (void)checkInTicketWithInfo:(NSDictionary *)info in:(BOOL)goingIn callback:(FasTApiResponseBlock)callback
+{
+    NSMutableDictionary *data = [info mutableCopy];
+    [data addEntriesFromDictionary:@{ @"checkpoint": clientId, @"in": @(goingIn) }];
+    [self postResource:@"tickets" withAction:@"check_in" data:data callback:callback];
 }
 
 #pragma mark node methods
@@ -245,13 +247,31 @@ static FasTApi *defaultApi = nil;
 
 #pragma mark class methods
 
+- (void)initNodeConnection
+{
+    if (nodeConnectionInitiated) return;
+    nodeConnectionInitiated = true;
+    
+    sIO = [[SocketIO alloc] initWithDelegate:self];
+    [sIO setResource:@"node"];
+    
+    inHibernation = YES;
+    
+    NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+    [center addObserver:self selector:@selector(appWillResignActive) name:UIApplicationWillResignActiveNotification object:nil];
+    [center addObserver:self selector:@selector(disconnect) name:UIApplicationDidEnterBackgroundNotification object:nil];
+    [center addObserver:self selector:@selector(prepareNodeConnection) name:UIApplicationWillEnterForegroundNotification object:nil];
+    
+    [self prepareNodeConnection];
+}
+
 - (void)postNotificationWithName:(NSString *)name info:(NSDictionary *)info
 {
     NSNotification *notification = [NSNotification notificationWithName:name object:self userInfo:info];
     [[NSNotificationCenter defaultCenter] postNotification:notification];
 }
 
-- (void)initConnections
+- (void)prepareNodeConnection
 {
     if (!clientType) return;
     
@@ -289,7 +309,7 @@ static FasTApi *defaultApi = nil;
 
 - (void)scheduleReconnect
 {
-    [self performSelector:@selector(initConnections) withObject:nil afterDelay:5];
+    [self performSelector:@selector(prepareNodeConnection) withObject:nil afterDelay:5];
 }
 
 - (void)initEventWithInfo:(NSDictionary *)info

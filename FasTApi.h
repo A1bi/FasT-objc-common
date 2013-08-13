@@ -29,24 +29,27 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
     SocketIO *sIO;
     FasTEvent *event;
     NSString *clientType;
-    NSString *retailId;
+    NSString *clientId;
     NSString *seatingId;
-    BOOL inHibernation;
+    BOOL inHibernation, nodeConnectionInitiated;
 }
 
 @property (nonatomic, retain) FasTEvent *event;
 @property (nonatomic, readonly) NSString *clientType;
+@property (nonatomic, readonly) NSString *clientId;
 
 + (FasTApi *)defaultApi;
++ (FasTApi *)defaultApiWithClientType:(NSString *)cType clientId:(NSString *)cId;
 
-- (void)initWithClientType:(NSString *)clientType retailId:(NSString *)rId;
+- (void)initNodeConnection;
 - (void)getResource:(NSString *)resource withAction:(NSString *)action callback:(FasTApiResponseBlock)callback;
 - (void)postResource:(NSString *)resource withAction:(NSString *)action data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
 - (void)setDate:(NSString *)dateId numberOfSeats:(NSInteger)numberOfSeats callback:(FasTApiResponseBlock)callback;
 - (void)chooseSeatWithId:(NSString *)seatId;
 - (void)resetSeating;
-- (void)placeOrderWithInfo:(NSDictionary *)info callback:(FasTApiResponseBlock)callback;
-- (void)getOrders;
+- (void)placeRetailOrderWithInfo:(NSDictionary *)info callback:(FasTApiResponseBlock)callback;
+- (void)getOrdersForRetailStore;
 - (void)markOrderAsPaid:(FasTOrder *)order withCallback:(FasTApiResponseBlock)callback;
+- (void)checkInTicketWithInfo:(NSDictionary *)info in:(BOOL)goingIn callback:(FasTApiResponseBlock)callback;
 
 @end
