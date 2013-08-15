@@ -7,6 +7,7 @@
 //
 
 #import "FasTPrintersTableViewController.h"
+#import "FasTConstants.h"
 #import "PKPrinter.h"
 
 @interface FasTPrintersTableViewController ()

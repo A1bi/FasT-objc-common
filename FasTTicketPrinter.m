@@ -14,6 +14,7 @@
 #import "FasTTicket.h"
 #import "FasTSeat.h"
 #import "FasTBarcode3of9.h"
+#import "FasTConstants.h"
 #import "PKPrinter.h"
 #import "PKPrintSettings.h"
 #import "PKPaper.h"
