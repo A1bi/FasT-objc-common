@@ -16,6 +16,7 @@
     NSString *orderId;
     NSString *number;
     NSString *queueNumber;
+    NSString *firstName, *lastName;
 	FasTEventDate *date; // TODO: remove this and rework the whole ticket number part in the ordering process
 	NSArray *tickets;
     NSDate *created;
@@ -24,7 +25,7 @@
     BOOL paid;
 }
 
-@property (nonatomic, readonly) NSString *orderId, *number, *queueNumber;
+@property (nonatomic, readonly) NSString *orderId, *number, *queueNumber, *firstName, *lastName;
 @property (nonatomic, retain) FasTEventDate *date;
 @property (nonatomic, retain) NSArray *tickets;
 @property (nonatomic, readonly) NSDate *created;
@@ -33,5 +34,6 @@
 @property (nonatomic, assign) BOOL paid;
 
 - (id)initWithInfo:(NSDictionary *)info event:(FasTEvent *)event;
+- (NSString *)fullNameWithLastNameFirst:(BOOL)flag;
 
 @end

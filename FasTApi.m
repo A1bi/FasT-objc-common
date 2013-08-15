@@ -208,6 +208,21 @@ static FasTApi *defaultApi = nil;
     }];
 }
 
+- (void)getOrdersForCurrentDateWithCallback:(void (^)(NSArray *))callback
+{
+    [self getResource:@"orders" withAction:@"current_date" callback:^(NSDictionary *response) {
+        if (!response[@"orders"]) callback(nil);
+        
+        NSMutableArray *orders = [NSMutableArray array];
+        for (NSDictionary *orderInfo in response[@"orders"]) {
+            FasTOrder *order = [[[FasTOrder alloc] initWithInfo:orderInfo event:event] autorelease];
+            [orders addObject:order];
+        }
+        
+        callback([NSArray arrayWithArray:orders]);
+    }];
+}
+
 - (void)markOrderAsPaid:(FasTOrder *)order withCallback:(FasTApiResponseBlock)callback
 {
     [self postResource:@"orders" withAction:[NSString stringWithFormat:@"%@/mark_paid", [order orderId]] data:nil callback:callback];

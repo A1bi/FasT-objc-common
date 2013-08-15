@@ -13,7 +13,7 @@
 
 @implementation FasTOrder
 
-@synthesize orderId, number, queueNumber, date, tickets, created, numberOfTickets, total, paid;
+@synthesize orderId, number, queueNumber, date, tickets, created, numberOfTickets, total, paid, firstName, lastName;
 
 - (id)initWithInfo:(NSDictionary *)info event:(FasTEvent *)event
 {
@@ -25,6 +25,9 @@
         total = [info[@"total"] floatValue];
         paid = [info[@"paid"] boolValue];
         created = [[NSDate dateWithTimeIntervalSince1970:[info[@"created"] intValue]] retain];
+        firstName = [info[@"first_name"] retain];
+        lastName = [info[@"last_name"] retain];
+        if (info[@"number_of_tickets"]) numberOfTickets = [info[@"number_of_tickets"] intValue];
         
         NSMutableArray *tmpTickets = [NSMutableArray array];
         for (NSDictionary *ticketInfo in info[@"tickets"]) {
@@ -45,7 +48,24 @@
 	[tickets release];
     [date release];
     [created release];
+    [firstName release];
+    [lastName release];
 	[super dealloc];
+}
+
+- (id)valueForKey:(NSString *)key
+{
+    id value = [super valueForKey:key];
+    if (([key isEqualToString:@"firstName"] || [key isEqualToString:@"lastName"]) && (![value isKindOfClass:[NSString class]] || [value length] < 1)) {
+        value = NSLocalizedStringByKey(@"notSpecified");
+    }
+    return value;
+}
+
+- (NSString *)fullNameWithLastNameFirst:(BOOL)flag
+{
+    NSString *ln = [self valueForKey:@"lastName"], *fn = [self valueForKey:@"firstName"];
+    return flag ? [NSString stringWithFormat:@"%@, %@", ln, fn] : [NSString stringWithFormat:@"%@ %@", fn, ln];
 }
 
 @end
