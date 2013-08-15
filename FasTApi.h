@@ -50,6 +50,7 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 - (void)placeRetailOrderWithInfo:(NSDictionary *)info callback:(FasTApiResponseBlock)callback;
 - (void)getOrdersForRetailStore;
 - (void)getOrdersForCurrentDateWithCallback:(void (^)(NSArray *))callback;
+- (void)getOrderWithNumber:(NSString *)number callback:(void (^)(FasTOrder *))callback;
 - (void)markOrderAsPaid:(FasTOrder *)order withCallback:(FasTApiResponseBlock)callback;
 - (void)checkInTicketWithInfo:(NSDictionary *)info in:(BOOL)goingIn callback:(FasTApiResponseBlock)callback;
 

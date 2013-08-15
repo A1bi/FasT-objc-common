@@ -223,6 +223,17 @@ static FasTApi *defaultApi = nil;
     }];
 }
 
+- (void)getOrderWithNumber:(NSString *)number callback:(void (^)(FasTOrder *))callback
+{
+    [self getResource:@"orders" withAction:[NSString stringWithFormat:@"number/%@", number] callback:^(NSDictionary *response) {
+        FasTOrder *order = nil;
+        if (response && response[@"order"]) {
+            order = [[[FasTOrder alloc] initWithInfo:response[@"order"] event:event] autorelease];
+        }
+        callback(order);
+    }];
+}
+
 - (void)markOrderAsPaid:(FasTOrder *)order withCallback:(FasTApiResponseBlock)callback
 {
     [self postResource:@"orders" withAction:[NSString stringWithFormat:@"%@/mark_paid", [order orderId]] data:nil callback:callback];

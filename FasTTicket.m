@@ -15,7 +15,7 @@
 
 @implementation FasTTicket
 
-@synthesize ticketId, number, order, date, type, seat, price;
+@synthesize ticketId, number, order, date, type, seat, price, canCheckIn, checkinErrors;
 
 - (id)initWithInfo:(NSDictionary *)info date:(FasTEventDate *)d order:(FasTOrder *)o
 {
@@ -31,6 +31,9 @@
         FasTEvent *event = [date event];
         type = [[event objectFromArray:@"ticketTypes" withId:info[@"typeId"] usingIdName:@"type"] retain];
         seat = [[event seats][[date dateId]][info[@"seatId"]] retain];
+        
+        if ([info[@"can_check_in"] isKindOfClass:[NSNumber class]]) canCheckIn = [info[@"can_check_in"] boolValue];
+        if ([info[@"checkin_errors"] isKindOfClass:[NSArray class]]) checkinErrors = info[@"checkin_errors"];
     }
     return self;
 }
@@ -43,6 +46,7 @@
     [type release];
     [seat release];
     [order release];
+    [checkinErrors release];
     [super dealloc];
 }
 

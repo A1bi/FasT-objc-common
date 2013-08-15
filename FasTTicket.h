@@ -22,6 +22,8 @@
     FasTTicketType *type;
     FasTSeat *seat;
     float price;
+    BOOL canCheckIn;
+    NSArray *checkinErrors;
 }
 
 @property (nonatomic, readonly) NSString *ticketId, *number;
@@ -30,6 +32,8 @@
 @property (nonatomic, readonly) FasTTicketType *type;
 @property (nonatomic, readonly) FasTSeat *seat;
 @property (nonatomic, readonly) float price;
+@property (nonatomic, readonly) BOOL canCheckIn;
+@property (nonatomic, readonly) NSArray *checkinErrors;
 
 - (id)initWithInfo:(NSDictionary *)info date:(FasTEventDate *)date order:(FasTOrder *)order;
 
