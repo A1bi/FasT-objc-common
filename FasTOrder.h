@@ -13,7 +13,7 @@
 
 @interface FasTOrder : NSObject
 {
-    NSString *orderId;
+    NSString *orderId, *bunchId;
     NSString *number;
     NSString *queueNumber;
     NSString *firstName, *lastName;
@@ -25,7 +25,7 @@
     BOOL paid;
 }
 
-@property (nonatomic, readonly) NSString *orderId, *number, *queueNumber, *firstName, *lastName;
+@property (nonatomic, readonly) NSString *orderId, *bunchId, *number, *queueNumber, *firstName, *lastName;
 @property (nonatomic, retain) FasTEventDate *date;
 @property (nonatomic, retain) NSArray *tickets;
 @property (nonatomic, readonly) NSDate *created;

@@ -13,7 +13,7 @@
 
 @implementation FasTOrder
 
-@synthesize orderId, number, queueNumber, date, tickets, created, numberOfTickets, total, paid, firstName, lastName;
+@synthesize orderId, bunchId, number, queueNumber, date, tickets, created, numberOfTickets, total, paid, firstName, lastName;
 
 - (id)initWithInfo:(NSDictionary *)info event:(FasTEvent *)event
 {
@@ -27,6 +27,7 @@
         created = [[NSDate dateWithTimeIntervalSince1970:[info[@"created"] intValue]] retain];
         firstName = [info[@"first_name"] retain];
         lastName = [info[@"last_name"] retain];
+        bunchId = [info[@"bunch_id"] retain];
         if (info[@"number_of_tickets"]) numberOfTickets = [info[@"number_of_tickets"] intValue];
         
         NSMutableArray *tmpTickets = [NSMutableArray array];
@@ -50,6 +51,7 @@
     [created release];
     [firstName release];
     [lastName release];
+    [bunchId release];
 	[super dealloc];
 }
 
