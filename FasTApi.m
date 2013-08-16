@@ -251,6 +251,12 @@ static FasTApi *defaultApi = nil;
     [self postResource:@"tickets" withAction:@"check_in" data:data callback:callback];
 }
 
+- (void)finishPurchaseWithItems:(NSArray *)items total:(float)total callback:(FasTApiResponseBlock)callback
+{
+    NSDictionary *data = @{ @"box_office": clientId, @"items": items, @"total": @(total) };
+    [self postResource:@"purchases" withAction:@"" data:data callback:callback];
+}
+
 #pragma mark node methods
 
 - (void)setDate:(NSString *)dateId numberOfSeats:(NSInteger)numberOfSeats callback:(FasTApiResponseBlock)callback
