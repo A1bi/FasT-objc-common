@@ -251,9 +251,13 @@ static FasTApi *defaultApi = nil;
     [self postResource:@"tickets" withAction:@"check_in" data:data callback:callback];
 }
 
-- (void)finishPurchaseWithItems:(NSArray *)items total:(float)total callback:(FasTApiResponseBlock)callback
+- (void)finishPurchaseWithItems:(NSArray *)items newOrder:(NSDictionary *)newOrder total:(float)total callback:(FasTApiResponseBlock)callback
 {
-    NSDictionary *data = @{ @"box_office": clientId, @"items": items, @"total": @(total) };
+    NSMutableDictionary *data = [NSMutableDictionary dictionaryWithDictionary:@{ @"box_office": clientId, @"items": items, @"total": @(total) }];
+    if (newOrder) {
+        data[@"new_order"] = newOrder;
+        data[@"seating_id"] = seatingId;
+    }
     [self postResource:@"purchases" withAction:@"" data:data callback:callback];
 }
 
