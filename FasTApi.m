@@ -261,6 +261,11 @@ static FasTApi *defaultApi = nil;
     [self postResource:@"purchases" withAction:@"" data:data callback:callback];
 }
 
+- (void)unlockSeats
+{
+    [self postResource:@"purchases" withAction:@"unlock_seats" data:@{ @"seating_id": seatingId } callback:NULL];
+}
+
 #pragma mark node methods
 
 - (void)setDate:(NSString *)dateId numberOfSeats:(NSInteger)numberOfSeats callback:(FasTApiResponseBlock)callback
