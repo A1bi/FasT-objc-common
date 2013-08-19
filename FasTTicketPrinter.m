@@ -26,7 +26,7 @@ static FasTTicketPrinter *sharedPrinter = nil;
 @interface FasTTicketPrinter ()
 
 - (void)initPrinter;
-- (void)generatePDFWithOrder:(FasTOrder *)order;
+- (void)generatePDFForTickets:(NSArray *)tickets;
 - (void)generateTicket:(FasTTicket *)ticket;
 - (void)drawBarcodeForTicket:(FasTTicket *)ticket;
 - (void)drawHeader;
@@ -104,13 +104,13 @@ static FasTTicketPrinter *sharedPrinter = nil;
     }
 }
 
-- (void)printTicketsForOrder:(FasTOrder *)order
+- (void)printTickets:(NSArray *)tickets
 {
     dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
     dispatch_async(queue, ^{
         if (!printer) return;
         
-        [self generatePDFWithOrder:order];
+        [self generatePDFForTickets:tickets];
         
         [printer printURL:[NSURL fileURLWithPath:ticketsPath] ofType:@"application/pdf" printSettings:printSettings];
         
@@ -119,14 +119,19 @@ static FasTTicketPrinter *sharedPrinter = nil;
     });
 }
 
-- (void)generatePDFWithOrder:(FasTOrder *)order
+- (void)printTicketsForOrder:(FasTOrder *)order
+{
+    [self printTickets:[order tickets]];
+}
+
+- (void)generatePDFForTickets:(NSArray *)tickets
 {
     UIGraphicsBeginPDFContextToFile(ticketsPath, CGRectMake(0, 0, ticketHeight, ticketWidth), nil);
     context = UIGraphicsGetCurrentContext();
     
     CGContextSetFillColorWithColor(context, [[UIColor blackColor] CGColor]);
     
-    for (FasTTicket *ticket in [order tickets]) {
+    for (FasTTicket *ticket in tickets) {
         [self generateTicket:ticket];
     }
     
@@ -175,7 +180,7 @@ static FasTTicketPrinter *sharedPrinter = nil;
 {
     NSString *originalText = NSLocalizedStringByKey(@"ticketHeader");
     UIFont *font = fonts[@"small"];
-    NSAttributedString *text = [[NSAttributedString alloc] initWithString:originalText attributes:@{NSKernAttributeName: @(1.2), NSFontAttributeName: font}];
+    NSAttributedString *text = [[[NSAttributedString alloc] initWithString:originalText attributes:@{NSKernAttributeName: @(1.2), NSFontAttributeName: font}] autorelease];
     CGSize size = [text size];
     CGFloat width = ticketWidth - posX - ticketMarginRight,
             startPoint = posX + width / 2 - size.width / 2,

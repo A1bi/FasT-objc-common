@@ -26,6 +26,7 @@
 
 + (FasTTicketPrinter *)sharedPrinter;
 
+- (void)printTickets:(NSArray *)tickets;
 - (void)printTicketsForOrder:(FasTOrder *)order;
 
 @end
