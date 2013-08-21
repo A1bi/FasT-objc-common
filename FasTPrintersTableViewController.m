@@ -56,21 +56,28 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return [foundPrinters count];
+    return [foundPrinters count] + 1;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    PKPrinter *printer = foundPrinters[[indexPath row]];
-    
     static NSString *cellIdentifier = @"Cell";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
     if (!cell) {
         cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellIdentifier] autorelease];
     }
-    [[cell textLabel] setText:[printer description]];
-    [[cell detailTextLabel] setText:[printer TXTRecord][@"ty"]];
-    if ([currentPrinterName isEqualToString:[printer name]]) {
+    
+    BOOL isCurrent = NO;
+    if ([indexPath row] > 0) {
+        PKPrinter *printer = foundPrinters[[indexPath row] - 1];
+        [[cell textLabel] setText:[printer description]];
+        [[cell detailTextLabel] setText:[printer TXTRecord][@"ty"]];
+        isCurrent = [currentPrinterName isEqualToString:[printer name]];
+    } else {
+        [[cell textLabel] setText:NSLocalizedStringByKey(@"noPrinter")];
+        isCurrent = !currentPrinterName;
+    }
+    if (isCurrent) {
         [cell setAccessoryType:UITableViewCellAccessoryCheckmark];
     }
     
@@ -81,9 +88,17 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    PKPrinter *printer = foundPrinters[[indexPath row]];
-    NSDictionary *prefs = @{FasTPrinterNamePrefKey: [printer name], FasTPrinterDescriptionPrefKey: [printer description]};
-    [[NSUserDefaults standardUserDefaults] setValuesForKeysWithDictionary:prefs];
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if ([indexPath row] == 0) {
+        for (NSString *key in @[FasTPrinterNamePrefKey, FasTPrinterDescriptionPrefKey]) {
+            [defaults removeObjectForKey:key];
+        }
+    } else {
+        PKPrinter *printer = foundPrinters[[indexPath row] - 1];
+        NSDictionary *prefs = @{FasTPrinterNamePrefKey: [printer name], FasTPrinterDescriptionPrefKey: [printer description]};
+        [defaults setValuesForKeysWithDictionary:prefs];
+    }
+    [defaults synchronize];
     [[self navigationController] popViewControllerAnimated:YES];
 }
 
