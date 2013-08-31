@@ -229,10 +229,12 @@ static FasTTicketPrinter *sharedPrinter = nil;
     
     printString = [type localizedPrice];
     size = [printString sizeWithFont:font];
-    posX = ticketWidth - size.width - 50;
-    [self drawText:printString withFontSize:@"normal" andIncreaseY:YES];
+    if ([type price] > 0) {
+        posX = ticketWidth - size.width - 50;
+        [self drawText:printString withFont:font];
+    }
+    posY += size.height + 23;
     posX = tmpX;
-    posY += 23;
 }
 
 - (void)drawBottomInfoForTicket:(FasTTicket *)ticket
