@@ -43,17 +43,11 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 
 - (void)initNodeConnection;
 - (void)getResource:(NSString *)resource withAction:(NSString *)action callback:(FasTApiResponseBlock)callback;
+- (void)getResource:(NSString *)resource withAction:(NSString *)action data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
 - (void)postResource:(NSString *)resource withAction:(NSString *)action data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
 - (void)setDate:(NSString *)dateId numberOfSeats:(NSInteger)numberOfSeats callback:(FasTApiResponseBlock)callback;
 - (void)chooseSeatWithId:(NSString *)seatId;
 - (void)resetSeating;
-- (void)placeRetailOrderWithInfo:(NSDictionary *)info callback:(FasTApiResponseBlock)callback;
-- (void)getOrdersForRetailStore;
-- (void)getOrdersForCurrentDateWithCallback:(void (^)(NSArray *))callback;
-- (void)getOrderWithNumber:(NSString *)number callback:(void (^)(FasTOrder *))callback;
-- (void)markOrderAsPaid:(FasTOrder *)order withCallback:(FasTApiResponseBlock)callback;
-- (void)checkInTicketWithInfo:(NSDictionary *)info in:(BOOL)goingIn callback:(FasTApiResponseBlock)callback;
-- (void)finishPurchaseWithItems:(NSArray *)items newOrder:(NSDictionary *)newOrder total:(float)total callback:(FasTApiResponseBlock)callback;
 - (void)unlockSeats;
 
 @end

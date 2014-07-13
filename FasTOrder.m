@@ -10,10 +10,11 @@
 #import "FasTEvent.h"
 #import "FasTEventDate.h"
 #import "FasTTicket.h"
+#import "FasTFormatter.h"
 
 @implementation FasTOrder
 
-@synthesize orderId, bunchId, number, queueNumber, date, tickets, created, numberOfTickets, total, paid, firstName, lastName;
+@synthesize orderId, number, date, tickets, created, total, paid, firstName, lastName, cancelled;
 
 - (id)initWithInfo:(NSDictionary *)info event:(FasTEvent *)event
 {
@@ -21,18 +22,16 @@
     if (self) {
         orderId = [info[@"id"] retain];
         number = [info[@"number"] retain];
-        queueNumber = [info[@"queue_number"] retain];
         total = [info[@"total"] floatValue];
         paid = [info[@"paid"] boolValue];
         created = [[NSDate dateWithTimeIntervalSince1970:[info[@"created"] intValue]] retain];
         firstName = [info[@"first_name"] retain];
         lastName = [info[@"last_name"] retain];
-        bunchId = [info[@"bunch_id"] retain];
-        if (info[@"number_of_tickets"]) numberOfTickets = [info[@"number_of_tickets"] intValue];
+        cancelled = [info[@"cancelled"] boolValue];
         
         NSMutableArray *tmpTickets = [NSMutableArray array];
         for (NSDictionary *ticketInfo in info[@"tickets"]) {
-            FasTEventDate *d = [event objectFromArray:@"dates" withId:ticketInfo[@"dateId"] usingIdName:@"date"];
+            FasTEventDate *d = [event objectFromArray:@"dates" withId:ticketInfo[@"date_id"] usingIdName:@"date"];
             FasTTicket *ticket = [[[FasTTicket alloc] initWithInfo:ticketInfo date:d order:self] autorelease];
             [tmpTickets addObject:ticket];
         }
@@ -45,13 +44,11 @@
 {
     [orderId release];
     [number release];
-    [queueNumber release];
 	[tickets release];
     [date release];
     [created release];
     [firstName release];
     [lastName release];
-    [bunchId release];
 	[super dealloc];
 }
 
@@ -64,10 +61,24 @@
     return value;
 }
 
+- (NSInteger)numberOfTickets
+{
+    NSInteger t = 0;
+    for (FasTTicket *ticket in tickets) {
+        if (!ticket.cancelled) t++;
+    }
+    return t;
+}
+
 - (NSString *)fullNameWithLastNameFirst:(BOOL)flag
 {
     NSString *ln = [self valueForKey:@"lastName"], *fn = [self valueForKey:@"firstName"];
     return flag ? [NSString stringWithFormat:@"%@, %@", ln, fn] : [NSString stringWithFormat:@"%@ %@", fn, ln];
+}
+
+- (NSString *)localizedTotal
+{
+    return [FasTFormatter stringForPrice:total];
 }
 
 @end

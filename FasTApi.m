@@ -160,7 +160,12 @@ static FasTApi *defaultApi = nil;
 
 - (void)getResource:(NSString *)resource withAction:(NSString *)action callback:(FasTApiResponseBlock)callback
 {
-    [self makeRequestWithResource:resource action:action method:@"GET" data:nil callback:callback];
+    [self getResource:resource withAction:action data:nil callback:callback];
+}
+
+- (void)getResource:(NSString *)resource withAction:(NSString *)action data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback
+{
+    [self makeRequestWithResource:resource action:action method:@"GET" data:data callback:callback];
 }
 
 - (void)postResource:(NSString *)resource withAction:(NSString *)action data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback
@@ -170,13 +175,14 @@ static FasTApi *defaultApi = nil;
 
 - (void)makeRequestWithResource:(NSString *)resource action:(NSString *)action method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback
 {
-    NSString *path = (action) ? [NSString stringWithFormat:@"/api/%@/%@", resource, action] : [NSString stringWithFormat:@"/api/%@", resource];
+    NSString *path = (action) ? [NSString stringWithFormat:@"/%@/%@", resource, action] : [NSString stringWithFormat:@"/%@", resource];
     [self makeRequestWithPath:path method:method data:data callback:callback];
 }
 
 - (void)makeRequestWithPath:(NSString *)path method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback
 {
 	MKNetworkOperation *op = [netEngine operationWithPath:path params:data httpMethod:method ssl:YES];
+    [op setHeader:@"Accept" withValue:@"application/json"];
 	[op setPostDataEncoding:MKNKPostDataEncodingTypeJSON];
 	
     [op addCompletionHandler:^(MKNetworkOperation *completedOperation) {
@@ -190,75 +196,9 @@ static FasTApi *defaultApi = nil;
 	[netEngine enqueueOperation:op];
 }
 
-- (void)placeRetailOrderWithInfo:(NSDictionary *)info callback:(FasTApiResponseBlock)callback
-{
-    NSMutableDictionary *orderInfo = [NSMutableDictionary dictionaryWithDictionary:info];
-    orderInfo[@"seatingId"] = seatingId;
-    NSDictionary *data = @{
-        @"order": orderInfo,
-        @"retailId": clientId
-    };
-    [self postResource:@"orders" withAction:nil data:data callback:callback];
-}
-
-- (void)getOrdersForRetailStore
-{
-    [self getResource:@"orders" withAction:[NSString stringWithFormat:@"retail/%@", clientId] callback:^(NSDictionary *response) {
-        [self updateOrdersWithArray:response];
-    }];
-}
-
-- (void)getOrdersForCurrentDateWithCallback:(void (^)(NSArray *))callback
-{
-    [self getResource:@"orders" withAction:@"current_date" callback:^(NSDictionary *response) {
-        if (!response[@"orders"]) callback(nil);
-        
-        NSMutableArray *orders = [NSMutableArray array];
-        for (NSDictionary *orderInfo in response[@"orders"]) {
-            FasTOrder *order = [[[FasTOrder alloc] initWithInfo:orderInfo event:event] autorelease];
-            [orders addObject:order];
-        }
-        
-        callback([NSArray arrayWithArray:orders]);
-    }];
-}
-
-- (void)getOrderWithNumber:(NSString *)number callback:(void (^)(FasTOrder *))callback
-{
-    [self getResource:@"orders" withAction:[NSString stringWithFormat:@"number/%@", number] callback:^(NSDictionary *response) {
-        FasTOrder *order = nil;
-        if (response && response[@"order"]) {
-            order = [[[FasTOrder alloc] initWithInfo:response[@"order"] event:event] autorelease];
-        }
-        callback(order);
-    }];
-}
-
-- (void)markOrderAsPaid:(FasTOrder *)order withCallback:(FasTApiResponseBlock)callback
-{
-    [self postResource:@"orders" withAction:[NSString stringWithFormat:@"%@/mark_paid", [order orderId]] data:nil callback:callback];
-}
-
 - (void)resetSeating
 {
     [sIO sendEvent:@"reset" withData:nil];
-}
-
-- (void)checkInTicketWithInfo:(NSDictionary *)info in:(BOOL)goingIn callback:(FasTApiResponseBlock)callback
-{
-    NSMutableDictionary *data = [info mutableCopy];
-    [data addEntriesFromDictionary:@{ @"checkpoint": clientId, @"in": @(goingIn) }];
-    [self postResource:@"tickets" withAction:@"check_in" data:data callback:callback];
-}
-
-- (void)finishPurchaseWithItems:(NSArray *)items newOrder:(NSDictionary *)newOrder total:(float)total callback:(FasTApiResponseBlock)callback
-{
-    NSMutableDictionary *data = [NSMutableDictionary dictionaryWithDictionary:@{ @"box_office": clientId, @"items": items, @"total": @(total) }];
-    if (newOrder) {
-        data[@"new_order"] = newOrder;
-        data[@"seating_id"] = seatingId;
-    }
-    [self postResource:@"purchases" withAction:@"" data:data callback:callback];
 }
 
 - (void)unlockSeats
@@ -321,7 +261,7 @@ static FasTApi *defaultApi = nil;
     
     if (inHibernation) [self postNotificationWithName:FasTApiConnectingNotification info:nil];
     inHibernation = NO;
-    [self getResource:@"events" withAction:@"current" callback:^(NSDictionary *response) {
+    [self getResource:@"api/events" withAction:@"current" callback:^(NSDictionary *response) {
         [self initEventWithInfo:response];
         [self connectToNode];
     }];

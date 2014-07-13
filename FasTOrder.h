@@ -13,27 +13,26 @@
 
 @interface FasTOrder : NSObject
 {
-    NSString *orderId, *bunchId;
+    NSString *orderId;
     NSString *number;
-    NSString *queueNumber;
     NSString *firstName, *lastName;
 	FasTEventDate *date; // TODO: remove this and rework the whole ticket number part in the ordering process
 	NSArray *tickets;
     NSDate *created;
-    NSInteger numberOfTickets;
     float total;
-    BOOL paid;
+    BOOL paid, cancelled;
 }
 
-@property (nonatomic, readonly) NSString *orderId, *bunchId, *number, *queueNumber, *firstName, *lastName;
+@property (nonatomic, readonly) NSString *orderId, *number, *firstName, *lastName;
 @property (nonatomic, retain) FasTEventDate *date;
 @property (nonatomic, retain) NSArray *tickets;
 @property (nonatomic, readonly) NSDate *created;
-@property (nonatomic, assign) NSInteger numberOfTickets;
 @property (nonatomic, assign) float total;
-@property (nonatomic, assign) BOOL paid;
+@property (nonatomic, assign) BOOL paid, cancelled;
 
 - (id)initWithInfo:(NSDictionary *)info event:(FasTEvent *)event;
 - (NSString *)fullNameWithLastNameFirst:(BOOL)flag;
+- (NSString *)localizedTotal;
+- (NSInteger)numberOfTickets;
 
 @end
