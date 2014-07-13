@@ -6,37 +6,25 @@
 //  Copyright (c) 2013 Albisigns. All rights reserved.
 //
 
-#import "FasTPrintersTableViewController.h"
+#import "FasTTicketPrintersTableViewController.h"
 #import "FasTConstants.h"
 #import "PKPrinter.h"
 
-@interface FasTPrintersTableViewController ()
+@interface FasTTicketPrintersTableViewController ()
 
 @end
 
-@implementation FasTPrintersTableViewController
+@implementation FasTTicketPrintersTableViewController
 
-- (id)init
+- (id)initWithCoder:(NSCoder *)aDecoder
 {
-    self = [super initWithStyle:UITableViewStyleGrouped];
+    self = [super initWithCoder:aDecoder];
     if (self) {
         foundPrinters = [[NSMutableArray alloc] init];
         printerBrowser = [[PKPrinterBrowser alloc] initWithDelegate:self];
-        currentPrinterName = [[[NSUserDefaults standardUserDefaults] objectForKey:FasTPrinterNamePrefKey] retain];
-        
-        [self setTitle:NSLocalizedStringByKey(@"selectPrinter")];
+        currentPrinterName = [[[NSUserDefaults standardUserDefaults] objectForKey:FasTTicketPrinterNamePrefKey] retain];
     }
     return self;
-}
-
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-}
-
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
 }
 
 - (void)dealloc
@@ -61,11 +49,7 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    static NSString *cellIdentifier = @"Cell";
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
-    if (!cell) {
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellIdentifier] autorelease];
-    }
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"FasTTicketPrintersTableCell"];
     
     BOOL isCurrent = NO;
     if ([indexPath row] > 0) {
@@ -90,12 +74,12 @@
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     if ([indexPath row] == 0) {
-        for (NSString *key in @[FasTPrinterNamePrefKey, FasTPrinterDescriptionPrefKey]) {
+        for (NSString *key in @[FasTTicketPrinterNamePrefKey, FasTTicketPrinterDescriptionPrefKey]) {
             [defaults removeObjectForKey:key];
         }
     } else {
         PKPrinter *printer = foundPrinters[[indexPath row] - 1];
-        NSDictionary *prefs = @{FasTPrinterNamePrefKey: [printer name], FasTPrinterDescriptionPrefKey: [printer description]};
+        NSDictionary *prefs = @{FasTTicketPrinterNamePrefKey: [printer name], FasTTicketPrinterDescriptionPrefKey: [printer description]};
         [defaults setValuesForKeysWithDictionary:prefs];
     }
     [defaults synchronize];

@@ -97,7 +97,7 @@ static FasTTicketPrinter *sharedPrinter = nil;
 
 - (void)initPrinter
 {
-    NSString *printerName = [[NSUserDefaults standardUserDefaults] objectForKey:FasTPrinterNamePrefKey];
+    NSString *printerName = [[NSUserDefaults standardUserDefaults] objectForKey:FasTTicketPrinterNamePrefKey];
     if (printerName && (!printer || ![[printer name] isEqualToString:printerName])) {
         [printer release];
         printer = [[PKPrinter printerWithName:printerName] retain];

@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "PKPrinterBrowser.h"
 
-@interface FasTPrintersTableViewController : UITableViewController <PKPrinterBrowserDelegate>
+@interface FasTTicketPrintersTableViewController : UITableViewController <PKPrinterBrowserDelegate>
 {
     NSMutableArray *foundPrinters;
     PKPrinterBrowser *printerBrowser;
