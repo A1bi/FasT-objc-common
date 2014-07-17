@@ -23,7 +23,7 @@ NSString * const FasTApiCannotConnectNotification = @"FasTApiCannotConnectNotifi
 static FasTApi *defaultApi = nil;
 
 #ifdef DEBUG
-    static NSString *kFasTApiUrl = @"fast.albisigns";
+    static NSString *kFasTApiUrl = @"albisigns";
 #else
     static NSString *kFasTApiUrl = @"theater-kaisersesch.de";
 #endif
@@ -184,6 +184,9 @@ static FasTApi *defaultApi = nil;
 	MKNetworkOperation *op = [netEngine operationWithPath:path params:data httpMethod:method ssl:YES];
     [op setHeader:@"Accept" withValue:@"application/json"];
 	[op setPostDataEncoding:MKNKPostDataEncodingTypeJSON];
+#ifdef DEBUG
+    [op setShouldContinueWithInvalidCertificate:YES];
+#endif
 	
     [op addCompletionHandler:^(MKNetworkOperation *completedOperation) {
 		if (callback) callback([completedOperation responseJSON]);

@@ -14,7 +14,7 @@
 
 @implementation FasTOrder
 
-@synthesize orderId, number, date, tickets, created, total, paid, firstName, lastName, cancelled;
+@synthesize orderId, number, date, tickets, created, total, paid, firstName, lastName, cancelled, logEvents, cancelReason;
 
 - (id)initWithInfo:(NSDictionary *)info event:(FasTEvent *)event
 {
@@ -28,6 +28,8 @@
         firstName = [info[@"first_name"] retain];
         lastName = [info[@"last_name"] retain];
         cancelled = [info[@"cancelled"] boolValue];
+        cancelReason = [info[@"cancel_reason"] retain];
+        logEvents = [info[@"log_events"] retain];
         
         NSMutableArray *tmpTickets = [NSMutableArray array];
         for (NSDictionary *ticketInfo in info[@"tickets"]) {
@@ -49,6 +51,8 @@
     [created release];
     [firstName release];
     [lastName release];
+    [cancelReason release];
+    [logEvents release];
 	[super dealloc];
 }
 
