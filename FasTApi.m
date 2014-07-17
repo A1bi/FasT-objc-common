@@ -231,6 +231,14 @@ static FasTApi *defaultApi = nil;
 
 #pragma mark class methods
 
+- (void)fetchCurrentEvent:(void (^)())callback
+{
+    [self getResource:@"api/events" withAction:@"current" callback:^(NSDictionary *response) {
+        [self initEventWithInfo:response];
+        if (callback) callback();
+    }];
+}
+
 - (void)initNodeConnection
 {
     if (nodeConnectionInitiated) return;
@@ -264,8 +272,7 @@ static FasTApi *defaultApi = nil;
     
     if (inHibernation) [self postNotificationWithName:FasTApiConnectingNotification info:nil];
     inHibernation = NO;
-    [self getResource:@"api/events" withAction:@"current" callback:^(NSDictionary *response) {
-        [self initEventWithInfo:response];
+    [self fetchCurrentEvent:^() {
         [self connectToNode];
     }];
 }

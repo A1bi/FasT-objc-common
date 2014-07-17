@@ -41,6 +41,7 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 + (FasTApi *)defaultApi;
 + (FasTApi *)defaultApiWithClientType:(NSString *)cType clientId:(NSString *)cId;
 
+- (void)fetchCurrentEvent:(void (^)())callback;
 - (void)initNodeConnection;
 - (void)getResource:(NSString *)resource withAction:(NSString *)action callback:(FasTApiResponseBlock)callback;
 - (void)getResource:(NSString *)resource withAction:(NSString *)action data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
