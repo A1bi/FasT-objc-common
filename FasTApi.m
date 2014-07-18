@@ -47,6 +47,7 @@ static FasTApi *defaultApi = nil;
 - (void)initEventWithInfo:(NSDictionary *)info;
 - (void)updateOrdersWithArray:(NSDictionary *)info;
 - (void)appWillResignActive;
+- (NSArray *)ticketIdsForTickets:(NSArray *)tickets;
 
 @end
 
@@ -263,14 +264,37 @@ static FasTApi *defaultApi = nil;
 
 - (void)fetchPrintableForTickets:(NSArray *)tickets callback:(void (^)(NSData *data))callback
 {
-    NSMutableArray *ticketIds = [NSMutableArray array];
-    for (FasTTicket *ticket in tickets) {
-        [ticketIds addObject:ticket.ticketId];
-    }
+    NSArray *ticketIds = [self ticketIdsForTickets:tickets];
     
     [self makeRequestWithResource:@"vorverkauf/bestellungen/0/tickets" action:@"printable" method:@"POST" data:@{ @"ticket_ids": ticketIds } callback:^(NSData *data) {
         callback(data);
     }];
+}
+
+- (void)markTickets:(NSArray *)tickets paid:(BOOL)paid pickedUp:(BOOL)pickedUp
+{
+    for (FasTTicket *ticket in tickets) {
+        if (paid) {
+            ticket.paid = paid;
+        }
+        if (pickedUp) {
+            ticket.pickedUp = pickedUp;
+        }
+    }
+    
+    NSDictionary *data = @{ @"ticket_ids": [self ticketIdsForTickets:tickets], @"paid": @(paid), @"picked_up": @(pickedUp) };
+    [self makeJsonRequestWithResource:@"vorverkauf/bestellungen/0/tickets" action:@"mark" method:@"PATCH" data:data callback:^(NSDictionary *response) {
+        
+    }];
+}
+
+- (NSArray *)ticketIdsForTickets:(NSArray *)tickets
+{
+    NSMutableArray *ticketIds = [NSMutableArray array];
+    for (FasTTicket *ticket in tickets) {
+        [ticketIds addObject:ticket.ticketId];
+    }
+    return ticketIds;
 }
 
 - (void)initNodeConnection
