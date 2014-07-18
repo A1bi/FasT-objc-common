@@ -9,6 +9,7 @@
 #import "FasTApi.h"
 #import "FasTEvent.h"
 #import "FasTOrder.h"
+#import "FasTTicket.h"
 #import "MKNetworkEngine.h"
 #import "SocketIOPacket.h"
 
@@ -33,8 +34,9 @@ static FasTApi *defaultApi = nil;
 @interface FasTApi ()
 
 - (id)initWithClientType:(NSString *)cType clientId:(NSString *)cId;
-- (void)makeRequestWithPath:(NSString *)path method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
-- (void)makeRequestWithResource:(NSString *)resource action:(NSString *)action method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
+- (void)makeJsonRequestWithPath:(NSString *)path method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
+- (void)makeJsonRequestWithResource:(NSString *)resource action:(NSString *)action method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
+- (void)makeRequestWithResource:(NSString *)resource action:(NSString *)action method:(NSString *)method data:(NSDictionary *)data callback:(void (^)(NSData *))callback;
 - (void)connectToNode;
 - (void)postNotificationWithName:(NSString *)name info:(NSDictionary *)info;
 - (void)prepareNodeConnection;
@@ -165,21 +167,21 @@ static FasTApi *defaultApi = nil;
 
 - (void)getResource:(NSString *)resource withAction:(NSString *)action data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback
 {
-    [self makeRequestWithResource:resource action:action method:@"GET" data:data callback:callback];
+    [self makeJsonRequestWithResource:resource action:action method:@"GET" data:data callback:callback];
 }
 
 - (void)postResource:(NSString *)resource withAction:(NSString *)action data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback
 {
-    [self makeRequestWithResource:resource action:action method:@"POST" data:data callback:callback];
+    [self makeJsonRequestWithResource:resource action:action method:@"POST" data:data callback:callback];
 }
 
-- (void)makeRequestWithResource:(NSString *)resource action:(NSString *)action method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback
+- (void)makeJsonRequestWithResource:(NSString *)resource action:(NSString *)action method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback
 {
     NSString *path = (action) ? [NSString stringWithFormat:@"/%@/%@", resource, action] : [NSString stringWithFormat:@"/%@", resource];
-    [self makeRequestWithPath:path method:method data:data callback:callback];
+    [self makeJsonRequestWithPath:path method:method data:data callback:callback];
 }
 
-- (void)makeRequestWithPath:(NSString *)path method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback
+- (void)makeJsonRequestWithPath:(NSString *)path method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback
 {
 	MKNetworkOperation *op = [netEngine operationWithPath:path params:data httpMethod:method ssl:YES];
     [op setHeader:@"Accept" withValue:@"application/json"];
@@ -190,6 +192,26 @@ static FasTApi *defaultApi = nil;
 	
     [op addCompletionHandler:^(MKNetworkOperation *completedOperation) {
 		if (callback) callback([completedOperation responseJSON]);
+        
+	} errorHandler:^(MKNetworkOperation *completedOperation, NSError* error) {
+		NSLog(@"%@", error);
+        if (callback) callback(nil);
+	}];
+	
+	[netEngine enqueueOperation:op];
+}
+
+- (void)makeRequestWithResource:(NSString *)resource action:(NSString *)action method:(NSString *)method data:(NSDictionary *)data callback:(void (^)(NSData *))callback
+{
+    NSString *path = (action) ? [NSString stringWithFormat:@"/%@/%@", resource, action] : [NSString stringWithFormat:@"/%@", resource];
+    MKNetworkOperation *op = [netEngine operationWithPath:path params:data httpMethod:method ssl:YES];
+    [op setPostDataEncoding:MKNKPostDataEncodingTypeJSON];
+#ifdef DEBUG
+    [op setShouldContinueWithInvalidCertificate:YES];
+#endif
+	
+    [op addCompletionHandler:^(MKNetworkOperation *completedOperation) {
+		if (callback) callback([completedOperation responseData]);
         
 	} errorHandler:^(MKNetworkOperation *completedOperation, NSError* error) {
 		NSLog(@"%@", error);
@@ -236,6 +258,18 @@ static FasTApi *defaultApi = nil;
     [self getResource:@"api/events" withAction:@"current" callback:^(NSDictionary *response) {
         [self initEventWithInfo:response];
         if (callback) callback();
+    }];
+}
+
+- (void)fetchPrintableForTickets:(NSArray *)tickets callback:(void (^)(NSData *data))callback
+{
+    NSMutableArray *ticketIds = [NSMutableArray array];
+    for (FasTTicket *ticket in tickets) {
+        [ticketIds addObject:ticket.ticketId];
+    }
+    
+    [self makeRequestWithResource:@"vorverkauf/bestellungen/0/tickets" action:@"printable" method:@"POST" data:@{ @"ticket_ids": ticketIds } callback:^(NSData *data) {
+        callback(data);
     }];
 }
 

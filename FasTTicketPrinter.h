@@ -10,15 +10,10 @@
 
 @class PKPrintSettings;
 @class PKPrinter;
-@class FasTEvent;
 @class FasTOrder;
 
 @interface FasTTicketPrinter : NSObject
 {
-    CGFloat posX, posY;
-    CGFloat ticketWidth, ticketHeight, ticketMargin, ticketMarginRight;
-    CGContextRef context;
-    NSDictionary *fonts;
     NSString *ticketsPath;
     PKPrintSettings *printSettings;
     PKPrinter *printer;
@@ -27,6 +22,5 @@
 + (FasTTicketPrinter *)sharedPrinter;
 
 - (void)printTickets:(NSArray *)tickets;
-- (void)printTicketsForOrder:(FasTOrder *)order;
 
 @end
