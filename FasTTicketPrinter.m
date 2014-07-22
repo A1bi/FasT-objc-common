@@ -15,8 +15,7 @@
 #import "PKPrintSettings.h"
 #import "PKPaper.h"
 
-#define kPointsToMilimetersFactor 35.28
-static const double kRotationRadians = -90 * M_PI / 180;
+#define kPointsToMillimeters(points) (points * 35.28)
 static FasTTicketPrinter *sharedPrinter = nil;
 
 @interface FasTTicketPrinter ()
@@ -46,8 +45,6 @@ static FasTTicketPrinter *sharedPrinter = nil;
     if (self) {
         ticketsPath = [[NSString stringWithFormat:@"%@tickets.pdf", NSTemporaryDirectory()] retain];
         
-        printSettings = [[PKPrintSettings default] retain];
-        
         [self initPrinter];
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(initPrinter) name:NSUserDefaultsDidChangeNotification object:nil];
@@ -59,7 +56,6 @@ static FasTTicketPrinter *sharedPrinter = nil;
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [ticketsPath release];
-    [printSettings release];
     [printer release];
     [super dealloc];
 }
@@ -82,9 +78,16 @@ static FasTTicketPrinter *sharedPrinter = nil;
         dispatch_async(queue, ^{
             [data writeToFile:ticketsPath atomically:YES];
             
-            PKPaper *ticketPaper = [[[PKPaper alloc] initWithWidth:280 * kPointsToMilimetersFactor Height:595 * kPointsToMilimetersFactor + 450 Left:0 Top:0 Right:0 Bottom:0 localizedName:nil codeName:nil] autorelease];
-            [printSettings setPaper:ticketPaper];
-            [printer printURL:[NSURL fileURLWithPath:ticketsPath] ofType:@"application/pdf" printSettings:printSettings];
+            CFURLRef url = (__bridge CFURLRef)[NSURL fileURLWithPath:ticketsPath];
+            CGPDFDocumentRef document = CGPDFDocumentCreateWithURL(url);
+            CGPDFPageRef firstPage = CGPDFDocumentGetPage(document, 1);
+            CGSize pageSize = CGPDFPageGetBoxRect(firstPage, kCGPDFMediaBox).size;
+            CGPDFDocumentRelease(document);
+            
+            PKPaper *paper = [[[PKPaper alloc] initWithWidth:kPointsToMillimeters(pageSize.height) Height:kPointsToMillimeters(pageSize.width) Left:0 Top:0 Right:0 Bottom:0 localizedName:nil codeName:nil] autorelease];
+            PKPrintSettings *settings = [[[PKPrintSettings alloc] init] autorelease];
+            [settings setPaper:paper];
+            [printer printURL:[NSURL fileURLWithPath:ticketsPath] ofType:@"application/pdf" printSettings:settings];
             
             [[NSFileManager defaultManager] removeItemAtPath:ticketsPath error:nil];
         });

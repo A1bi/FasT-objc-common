@@ -8,14 +8,11 @@
 
 #import <Foundation/Foundation.h>
 
-@class PKPrintSettings;
 @class PKPrinter;
-@class FasTOrder;
 
 @interface FasTTicketPrinter : NSObject
 {
     NSString *ticketsPath;
-    PKPrintSettings *printSettings;
     PKPrinter *printer;
 }
 

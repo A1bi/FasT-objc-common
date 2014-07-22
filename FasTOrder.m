@@ -10,6 +10,7 @@
 #import "FasTEvent.h"
 #import "FasTEventDate.h"
 #import "FasTTicket.h"
+#import "FasTLogEvent.h"
 #import "FasTFormatter.h"
 
 @implementation FasTOrder
@@ -29,12 +30,17 @@
         lastName = [info[@"last_name"] retain];
         cancelled = [info[@"cancelled"] boolValue];
         cancelReason = [info[@"cancel_reason"] retain];
-        logEvents = [info[@"log_events"] retain];
+        
+        NSDictionary *itemInfo;
+        logEvents = [[NSMutableArray alloc] init];
+        for (itemInfo in info[@"log_events"]) {
+            [logEvents addObject:[[[FasTLogEvent alloc] initWithInfo:itemInfo] autorelease]];
+        }
         
         NSMutableArray *tmpTickets = [NSMutableArray array];
-        for (NSDictionary *ticketInfo in info[@"tickets"]) {
-            FasTEventDate *d = [event objectFromArray:@"dates" withId:ticketInfo[@"date_id"] usingIdName:@"date"];
-            FasTTicket *ticket = [[[FasTTicket alloc] initWithInfo:ticketInfo date:d order:self] autorelease];
+        for (itemInfo in info[@"tickets"]) {
+            FasTEventDate *d = [event objectFromArray:@"dates" withId:itemInfo[@"date_id"] usingIdName:@"date"];
+            FasTTicket *ticket = [[[FasTTicket alloc] initWithInfo:itemInfo date:d order:self] autorelease];
             [tmpTickets addObject:ticket];
         }
         tickets = [[NSArray arrayWithArray:tmpTickets] retain];

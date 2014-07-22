@@ -18,7 +18,8 @@
     NSString *firstName, *lastName;
     NSString *cancelReason;
 	FasTEventDate *date; // TODO: remove this and rework the whole ticket number part in the ordering process
-	NSArray *tickets, *logEvents;
+    NSArray *tickets;
+    NSMutableArray *logEvents;
     NSDate *created;
     float total;
     BOOL paid, cancelled;
@@ -30,7 +31,7 @@
 @property (nonatomic, readonly) NSDate *created;
 @property (nonatomic, assign) float total;
 @property (nonatomic, assign) BOOL paid, cancelled;
-@property (nonatomic, readonly) NSArray *logEvents;
+@property (nonatomic, readonly) NSMutableArray *logEvents;
 
 - (id)initWithInfo:(NSDictionary *)info event:(FasTEvent *)event;
 - (NSString *)fullNameWithLastNameFirst:(BOOL)flag;
