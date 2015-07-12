@@ -15,7 +15,7 @@
 
 @implementation FasTOrder
 
-@synthesize orderId, number, date, tickets, created, total, paid, firstName, lastName, logEvents;
+@synthesize orderId, number, date, tickets, created, total, balance, paid, firstName, lastName, logEvents;
 
 - (id)initWithInfo:(NSDictionary *)info event:(FasTEvent *)event
 {
@@ -24,6 +24,7 @@
         orderId = [info[@"id"] retain];
         number = [info[@"number"] retain];
         total = [info[@"total"] floatValue];
+        balance = [info[@"balance"] floatValue];
         paid = [info[@"paid"] boolValue];
         created = [[NSDate dateWithTimeIntervalSince1970:[info[@"created"] intValue]] retain];
         firstName = [info[@"first_name"] retain];
@@ -86,6 +87,11 @@
 - (NSString *)localizedTotal
 {
     return [FasTFormatter stringForPrice:total];
+}
+
+- (NSString *)localizedBalance
+{
+    return [FasTFormatter stringForPrice:balance];
 }
 
 - (BOOL)cancelled

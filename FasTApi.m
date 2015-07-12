@@ -279,9 +279,18 @@ static FasTApi *defaultApi = nil;
     }
     
     NSDictionary *data = @{ @"ticket_ids": [self ticketIdsForTickets:tickets] };
-    [self makeJsonRequestWithResource:@"api/box_office/" action:@"pick_up_tickets" method:@"PATCH" data:data callback:^(NSDictionary *response) {
-        
-    }];
+    [self makeJsonRequestWithResource:@"api/box_office" action:@"pick_up_tickets" method:@"PATCH" data:data callback:NULL];
+}
+
+- (void)finishPurchase:(NSDictionary *)data
+{
+    [self makeJsonRequestWithResource:@"api/box_office" action:@"purchase" method:@"POST" data:data callback:NULL];
+}
+
+- (NSString *)URLForOrder:(FasTOrder *)order
+{
+    NSString *scheme = kFasTApiSSL ? @"https" : @"http";
+    return [NSString stringWithFormat:@"%@://%@/vorverkauf/bestellungen/%@", scheme, kFasTApiUrl, order.orderId];
 }
 
 - (NSArray *)ticketIdsForTickets:(NSArray *)tickets

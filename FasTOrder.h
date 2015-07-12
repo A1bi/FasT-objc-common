@@ -20,7 +20,7 @@
     NSArray *tickets;
     NSMutableArray *logEvents;
     NSDate *created;
-    float total;
+    float total, balance;
     BOOL paid;
 }
 
@@ -28,13 +28,14 @@
 @property (nonatomic, retain) FasTEventDate *date;
 @property (nonatomic, retain) NSArray *tickets;
 @property (nonatomic, readonly) NSDate *created;
-@property (nonatomic, assign) float total;
+@property (nonatomic, assign) float total, balance;
 @property (nonatomic, assign) BOOL paid;
 @property (nonatomic, readonly) NSMutableArray *logEvents;
 
 - (id)initWithInfo:(NSDictionary *)info event:(FasTEvent *)event;
 - (NSString *)fullNameWithLastNameFirst:(BOOL)flag;
 - (NSString *)localizedTotal;
+- (NSString *)localizedBalance;
 - (NSInteger)numberOfTickets;
 - (BOOL)cancelled;
 
