@@ -24,9 +24,11 @@ NSString * const FasTApiCannotConnectNotification = @"FasTApiCannotConnectNotifi
 static FasTApi *defaultApi = nil;
 
 #ifdef DEBUG
-    static NSString *kFasTApiUrl = @"albisigns";
+    static NSString *kFasTApiUrl = @"127.0.0.1:4000";
+    static BOOL kFasTApiSSL = NO;
 #else
-    static NSString *kFasTApiUrl = @"theater-kaisersesch.de";
+    static NSString *kFasTApiUrl = @"www.theater-kaisersesch.de";
+    static BOOL kFasTApiSSL = YES;
 #endif
 
 #define kFasTApiTimeOut 10
@@ -36,7 +38,7 @@ static FasTApi *defaultApi = nil;
 - (id)initWithClientType:(NSString *)cType clientId:(NSString *)cId;
 - (void)makeJsonRequestWithPath:(NSString *)path method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
 - (void)makeJsonRequestWithResource:(NSString *)resource action:(NSString *)action method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
-- (void)makeRequestWithResource:(NSString *)resource action:(NSString *)action method:(NSString *)method data:(NSDictionary *)data callback:(void (^)(NSData *))callback;
+- (void)makeRequestWithPath:(NSString *)path method:(NSString *)method data:(NSDictionary *)data callback:(void (^)(NSData *))callback;
 - (void)connectToNode;
 - (void)postNotificationWithName:(NSString *)name info:(NSDictionary *)info;
 - (void)prepareNodeConnection;
@@ -184,7 +186,7 @@ static FasTApi *defaultApi = nil;
 
 - (void)makeJsonRequestWithPath:(NSString *)path method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback
 {
-	MKNetworkOperation *op = [netEngine operationWithPath:path params:data httpMethod:method ssl:YES];
+	MKNetworkOperation *op = [netEngine operationWithPath:path params:data httpMethod:method ssl:kFasTApiSSL];
     [op setHeader:@"Accept" withValue:@"application/json"];
 	[op setPostDataEncoding:MKNKPostDataEncodingTypeJSON];
 #ifdef DEBUG
@@ -202,10 +204,9 @@ static FasTApi *defaultApi = nil;
 	[netEngine enqueueOperation:op];
 }
 
-- (void)makeRequestWithResource:(NSString *)resource action:(NSString *)action method:(NSString *)method data:(NSDictionary *)data callback:(void (^)(NSData *))callback
+- (void)makeRequestWithPath:(NSString *)path method:(NSString *)method data:(NSDictionary *)data callback:(void (^)(NSData *))callback
 {
-    NSString *path = (action) ? [NSString stringWithFormat:@"/%@/%@", resource, action] : [NSString stringWithFormat:@"/%@", resource];
-    MKNetworkOperation *op = [netEngine operationWithPath:path params:data httpMethod:method ssl:YES];
+    MKNetworkOperation *op = [netEngine operationWithPath:path params:data httpMethod:method ssl:kFasTApiSSL];
     [op setPostDataEncoding:MKNKPostDataEncodingTypeJSON];
 #ifdef DEBUG
     [op setShouldContinueWithInvalidCertificate:YES];
@@ -266,24 +267,19 @@ static FasTApi *defaultApi = nil;
 {
     NSArray *ticketIds = [self ticketIdsForTickets:tickets];
     
-    [self makeRequestWithResource:@"vorverkauf/bestellungen/0/tickets" action:@"printable" method:@"POST" data:@{ @"ticket_ids": ticketIds } callback:^(NSData *data) {
+    [self makeRequestWithPath:@"api/box_office/ticket_printable" method:@"POST" data:@{ @"ticket_ids": ticketIds } callback:^(NSData *data) {
         callback(data);
     }];
 }
 
-- (void)markTickets:(NSArray *)tickets paid:(BOOL)paid pickedUp:(BOOL)pickedUp
+- (void)pickUpTickets:(NSArray *)tickets
 {
     for (FasTTicket *ticket in tickets) {
-        if (paid) {
-            ticket.paid = paid;
-        }
-        if (pickedUp) {
-            ticket.pickedUp = pickedUp;
-        }
+        ticket.pickedUp = YES;
     }
     
-    NSDictionary *data = @{ @"ticket_ids": [self ticketIdsForTickets:tickets], @"paid": @(paid), @"picked_up": @(pickedUp) };
-    [self makeJsonRequestWithResource:@"vorverkauf/bestellungen/0/tickets" action:@"mark" method:@"PATCH" data:data callback:^(NSDictionary *response) {
+    NSDictionary *data = @{ @"ticket_ids": [self ticketIdsForTickets:tickets] };
+    [self makeJsonRequestWithResource:@"api/box_office/" action:@"pick_up_tickets" method:@"PATCH" data:data callback:^(NSDictionary *response) {
         
     }];
 }

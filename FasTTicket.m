@@ -15,7 +15,7 @@
 
 @implementation FasTTicket
 
-@synthesize ticketId, number, order, date, type, seat, price, canCheckIn, checkinErrors, cancelled, paid, cancelReason, pickedUp;
+@synthesize ticketId, number, order, date, type, seat, price, canCheckIn, checkinErrors, cancelled, cancelReason, pickedUp;
 
 - (id)initWithInfo:(NSDictionary *)info date:(FasTEventDate *)d order:(FasTOrder *)o
 {
@@ -33,7 +33,6 @@
         seat = [[event seats][[date dateId]][info[@"seat_id"]] retain];
         cancelled = [info[@"cancelled"] boolValue];
         cancelReason = [info[@"cancel_reason"] retain];
-        paid = [info[@"paid"] boolValue];
         pickedUp = [info[@"picked_up"] boolValue];
         
         if ([info[@"can_check_in"] isKindOfClass:[NSNumber class]]) canCheckIn = [info[@"can_check_in"] boolValue];

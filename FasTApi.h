@@ -47,7 +47,7 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 - (void)getResource:(NSString *)resource withAction:(NSString *)action data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
 - (void)postResource:(NSString *)resource withAction:(NSString *)action data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
 - (void)fetchPrintableForTickets:(NSArray *)tickets callback:(void (^)(NSData *))callback;
-- (void)markTickets:(NSArray *)tickets paid:(BOOL)paid pickedUp:(BOOL)pickedUp;
+- (void)pickUpTickets:(NSArray *)tickets;
 - (void)setDate:(NSString *)dateId numberOfSeats:(NSInteger)numberOfSeats callback:(FasTApiResponseBlock)callback;
 - (void)chooseSeatWithId:(NSString *)seatId;
 - (void)resetSeating;

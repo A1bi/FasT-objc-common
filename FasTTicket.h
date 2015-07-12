@@ -23,7 +23,7 @@
     FasTTicketType *type;
     FasTSeat *seat;
     float price;
-    BOOL canCheckIn, cancelled, paid;
+    BOOL canCheckIn, cancelled;
     NSArray *checkinErrors;
 }
 
@@ -33,7 +33,7 @@
 @property (nonatomic, readonly) FasTTicketType *type;
 @property (nonatomic, readonly) FasTSeat *seat;
 @property (nonatomic, readonly) float price;
-@property (nonatomic) BOOL canCheckIn, cancelled, paid, pickedUp;
+@property (nonatomic) BOOL canCheckIn, cancelled, pickedUp;
 @property (nonatomic, readonly) NSArray *checkinErrors;
 
 - (id)initWithInfo:(NSDictionary *)info date:(FasTEventDate *)date order:(FasTOrder *)order;
