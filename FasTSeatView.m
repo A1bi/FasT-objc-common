@@ -45,13 +45,19 @@
     UITapGestureRecognizer *tapRecognizer = [[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped)] autorelease];
     [self addGestureRecognizer:tapRecognizer];
     
-    self.layer.borderColor = [UIColor blackColor].CGColor;
-    self.layer.borderWidth = 1;
+    self.layer.cornerRadius = 5.0f;
+    self.layer.masksToBounds = YES;
+    
+    _numberLabel = [[UILabel alloc] initWithFrame:self.bounds];
+    _numberLabel.font = [UIFont systemFontOfSize:14];
+    _numberLabel.textAlignment = NSTextAlignmentCenter;
+    [self addSubview:_numberLabel];
 }
 
 - (void)dealloc
 {
     [seatId release];
+    [_numberLabel release];
     [super dealloc];
 }
 

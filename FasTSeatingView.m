@@ -10,10 +10,10 @@
 #import "FasTSeatView.h"
 #import "FasTSeat.h"
 
-static int      kMaxCellsX = 185;
-static int      kMaxCellsY = 75;
-static float    kSizeFactorsX = 3.7;
-static float    kSizeFactorsY = 3.7;
+static int      kMaxCellsX = 150;
+static int      kMaxCellsY = 60;
+static float    kSizeFactorsX = 2.8;
+static float    kSizeFactorsY = 2.8;
 
 @interface FasTSeatingView ()
 
@@ -95,6 +95,12 @@ static float    kSizeFactorsY = 3.7;
     [seatView setDelegate:[self delegate]];
     seatViews[[seat seatId]] = seatView;
 	[seatsView addSubview:seatView];
+    
+    NSString *colorMethod = [NSString stringWithFormat:@"%@Color", @"blue"];
+    UIColor *color = [[UIColor class] performSelector:NSSelectorFromString(colorMethod)];
+    seatView.layer.borderColor = color.CGColor;
+    seatView.layer.borderWidth = 2;
+    seatView.numberLabel.text = seat.number;
     
     return seatView;
 }

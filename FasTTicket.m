@@ -22,15 +22,15 @@
     self = [super init];
     if (self) {
         order = [o retain];
-        date = [d retain];
+        date = d;
         
         ticketId = [info[@"id"] retain];
         number = [info[@"number"] retain];
         price = [info[@"price"] floatValue];
         
         FasTEvent *event = [date event];
-        type = [[event objectFromArray:@"ticketTypes" withId:info[@"type_id"] usingIdName:@"type"] retain];
-        seat = [[event seats][[date dateId]][info[@"seat_id"]] retain];
+        type = [event objectFromArray:@"ticketTypes" withId:info[@"type_id"] usingIdName:@"type"];
+        seat = [event seats][[date dateId]][info[@"seat_id"]];
         cancelled = [info[@"cancelled"] boolValue];
         cancelReason = [info[@"cancel_reason"] retain];
         pickedUp = [info[@"picked_up"] boolValue];
@@ -45,9 +45,6 @@
 {
     [ticketId release];
     [number release];
-    [date release];
-    [type release];
-    [seat release];
     [order release];
     [checkinErrors release];
     [cancelReason release];

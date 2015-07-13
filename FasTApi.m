@@ -8,8 +8,10 @@
 
 #import "FasTApi.h"
 #import "FasTEvent.h"
+#import "FasTEventDate.h"
 #import "FasTOrder.h"
 #import "FasTTicket.h"
+#import "FasTTicketType.h"
 #import "MKNetworkEngine.h"
 #import "SocketIOPacket.h"
 
@@ -230,7 +232,7 @@ static FasTApi *defaultApi = nil;
 
 - (void)unlockSeats
 {
-    [self postResource:@"purchases" withAction:@"unlock_seats" data:@{ @"seating_id": seatingId } callback:NULL];
+    [self makeJsonRequestWithPath:@"api/box_office/unlock_seats" method:@"POST" data:@{ @"seating_id": seatingId } callback:NULL];
 }
 
 #pragma mark node methods
@@ -249,7 +251,7 @@ static FasTApi *defaultApi = nil;
 
 - (void)connectToNode
 {
-    [sIO setUseSecure:YES];
+    [sIO setUseSecure:kFasTApiSSL];
     [sIO connectToHost:kFasTApiUrl onPort:0 withParams:nil withNamespace:[NSString stringWithFormat:@"/%@", clientType]];
 }
 
@@ -257,9 +259,29 @@ static FasTApi *defaultApi = nil;
 
 - (void)fetchCurrentEvent:(void (^)())callback
 {
-    [self getResource:@"api/events" withAction:@"current" callback:^(NSDictionary *response) {
+    [self getResource:@"api/box_office" withAction:@"event" callback:^(NSDictionary *response) {
         [self initEventWithInfo:response];
         if (callback) callback();
+    }];
+}
+
+- (void)placeOrder:(FasTOrder *)order callback:(void (^)(FasTOrder *order))callback
+{
+    NSMutableDictionary *ticketsInfo = [NSMutableDictionary dictionary];
+    for (FasTTicket *ticket in order.tickets) {
+        NSInteger number = 0;
+        if (ticketsInfo[ticket.type.typeId]) {
+            number = ((NSNumber *)ticketsInfo[ticket.type.typeId]).integerValue;
+        }
+        number++;
+        ticketsInfo[ticket.type.typeId] = @(number);
+    }
+    
+    NSDictionary *orderInfo = @{ @"date": order.date.dateId, @"seatingId": seatingId, @"tickets": ticketsInfo };
+    
+    [self makeJsonRequestWithPath:@"api/box_office/place_order" method:@"POST" data:@{ @"order": orderInfo } callback:^(NSDictionary *response) {
+        FasTOrder *newOrder = [[[FasTOrder alloc] initWithInfo:response[@"order"] event:event] autorelease];
+        callback(newOrder);
     }];
 }
 

@@ -30,8 +30,8 @@
 @property (nonatomic, readonly) NSString *ticketId, *number, *cancelReason;
 @property (nonatomic, readonly) FasTOrder *order;
 @property (nonatomic, readonly) FasTEventDate *date;
-@property (nonatomic, readonly) FasTTicketType *type;
-@property (nonatomic, readonly) FasTSeat *seat;
+@property (nonatomic, assign) FasTTicketType *type;
+@property (nonatomic, assign) FasTSeat *seat;
 @property (nonatomic, readonly) float price;
 @property (nonatomic) BOOL canCheckIn, cancelled, pickedUp;
 @property (nonatomic, readonly) NSArray *checkinErrors;

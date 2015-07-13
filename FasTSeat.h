@@ -11,13 +11,13 @@
 @interface FasTSeat : NSObject
 {
     NSString *seatId;
-    NSString *number, *row, *blockName;
+    NSString *number, *row, *blockName, *blockColor;
     NSInteger posX, posY;
     BOOL taken, chosen;
 }
 
 @property (nonatomic, readonly) NSString *seatId;
-@property (nonatomic, readonly) NSString *number, *row, *blockName;
+@property (nonatomic, readonly) NSString *number, *row, *blockName, *blockColor;
 @property (nonatomic, readonly) NSInteger posX, posY;
 @property (nonatomic, readonly) BOOL taken, chosen;
 

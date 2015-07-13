@@ -24,6 +24,7 @@ typedef enum {
 @property (nonatomic) FasTSeatViewState state;
 @property (nonatomic, readonly) NSString *seatId;
 @property (nonatomic, assign) id<FasTSeatingViewDelegate> delegate;
+@property (nonatomic, readonly) UILabel *numberLabel;
 
 - (id)initWithFrame:(CGRect)frame seatId:(NSString *)sId;
 

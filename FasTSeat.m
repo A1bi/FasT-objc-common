@@ -10,7 +10,7 @@
 
 @implementation FasTSeat
 
-@synthesize seatId, number, row, blockName, posX, posY, taken, chosen;
+@synthesize seatId, number, row, blockName, blockColor, posX, posY, taken, chosen;
 
 - (id)initWithInfo:(NSDictionary *)info
 {
@@ -19,7 +19,8 @@
         seatId = [info[@"id"] retain];
         number = [info[@"number"] retain];
         row = [info[@"row"] retain];
-        blockName = [info[@"block_name"] retain];
+        blockName = [info[@"block"][@"name"] retain];
+        blockColor = [info[@"block"][@"color"] retain];
         
         NSDictionary *grid = info[@"grid"];
         posX = [grid[@"x"] intValue];
@@ -34,6 +35,7 @@
     [number release];
     [row release];
     [blockName release];
+    [blockColor release];
     [super dealloc];
 }
 
