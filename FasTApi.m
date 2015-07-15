@@ -235,6 +235,21 @@ static FasTApi *defaultApi = nil;
     [self makeJsonRequestWithPath:@"api/box_office/unlock_seats" method:@"POST" data:@{ @"seating_id": seatingId } callback:NULL];
 }
 
+- (void)cancelBoxOfficeOrder:(FasTOrder *)order
+{
+    [self makeJsonRequestWithPath:@"api/box_office/cancel_order" method:@"PATCH" data:@{ @"id": order.orderId } callback:NULL];
+}
+
+- (void)cancelTickets:(NSArray *)tickets callback:(void (^)(FasTOrder *order))callback
+{
+    NSArray *ticketIds = [self ticketIdsForTickets:tickets];
+    
+    [self makeJsonRequestWithPath:@"api/box_office/cancel_tickets" method:@"PATCH" data:@{ @"ticket_ids": ticketIds } callback:^(NSDictionary *response) {
+        FasTOrder *order = [[[FasTOrder alloc] initWithInfo:response[@"order"] event:self.event] autorelease];
+        callback(order);
+    }];
+}
+
 #pragma mark node methods
 
 - (void)setDate:(NSString *)dateId numberOfSeats:(NSInteger)numberOfSeats callback:(FasTApiResponseBlock)callback
