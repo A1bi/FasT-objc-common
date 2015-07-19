@@ -71,7 +71,7 @@ static FasTTicketPrinter *sharedPrinter = nil;
 
 - (void)printTickets:(NSArray *)tickets
 {
-    if (!printer) return;
+    if (!printer || tickets.count < 1) return;
     
     [[FasTApi defaultApi] fetchPrintableForTickets:tickets callback:^(NSData *data) {
         dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);

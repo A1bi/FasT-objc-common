@@ -345,7 +345,7 @@ static FasTApi *defaultApi = nil;
     nodeConnectionInitiated = true;
     
     sIO = [[SocketIO alloc] initWithDelegate:self];
-    [sIO setResourceName:@"node"];
+    sIO.resource = @"node";
     
     inHibernation = YES;
     

@@ -46,7 +46,7 @@ static const FasTBarcode3of9Encoding FasTBarcode3of9Encodings[kFasTBarcode3of9Ch
             barWidthNarrow = rect.size.width / ([content length] * 13 - 1),
             barWidthWide = barWidthNarrow * 2;
     
-    unsigned int contentLength = [content length];
+    NSUInteger contentLength = [content length];
     unichar buffer[contentLength + 1];
     [content getCharacters:buffer range:NSMakeRange(0, contentLength)];
     
