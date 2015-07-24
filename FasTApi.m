@@ -41,6 +41,7 @@ static FasTApi *defaultApi = nil;
 - (void)makeJsonRequestWithPath:(NSString *)path method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
 - (void)makeJsonRequestWithResource:(NSString *)resource action:(NSString *)action method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback;
 - (void)makeRequestWithPath:(NSString *)path method:(NSString *)method data:(NSDictionary *)data callback:(void (^)(NSData *))callback;
+- (void)makeRequestWithAction:(NSString *)action method:(NSString *)method tickets:(NSArray *)tickets callback:(void (^)(FasTOrder *))callback;
 - (void)connectToNode;
 - (void)postNotificationWithName:(NSString *)name info:(NSDictionary *)info;
 - (void)prepareNodeConnection;
@@ -240,14 +241,24 @@ static FasTApi *defaultApi = nil;
     [self makeJsonRequestWithPath:@"api/box_office/cancel_order" method:@"PATCH" data:@{ @"id": order.orderId } callback:NULL];
 }
 
-- (void)cancelTickets:(NSArray *)tickets callback:(void (^)(FasTOrder *order))callback
+- (void)makeRequestWithAction:(NSString *)action method:(NSString *)method tickets:(NSArray *)tickets callback:(void (^)(FasTOrder *))callback
 {
     NSArray *ticketIds = [self ticketIdsForTickets:tickets];
     
-    [self makeJsonRequestWithPath:@"api/box_office/cancel_tickets" method:@"PATCH" data:@{ @"ticket_ids": ticketIds } callback:^(NSDictionary *response) {
+    [self makeJsonRequestWithPath:[NSString stringWithFormat:@"api/box_office/%@", action] method:method data:@{ @"ticket_ids": ticketIds } callback:^(NSDictionary *response) {
         FasTOrder *order = [[[FasTOrder alloc] initWithInfo:response[@"order"] event:self.event] autorelease];
         callback(order);
     }];
+}
+
+- (void)cancelTickets:(NSArray *)tickets callback:(void (^)(FasTOrder *order))callback
+{
+    [self makeRequestWithAction:@"cancel_tickets" method:@"PATCH" tickets:tickets callback:callback];
+}
+
+- (void)enableResaleForTickets:(NSArray *)tickets callback:(void (^)(FasTOrder *))callback
+{
+    [self makeRequestWithAction:@"enable_resale_for_tickets" method:@"PATCH" tickets:tickets callback:callback];
 }
 
 #pragma mark node methods
@@ -345,7 +356,7 @@ static FasTApi *defaultApi = nil;
     nodeConnectionInitiated = true;
     
     sIO = [[SocketIO alloc] initWithDelegate:self];
-    sIO.resource = @"node";
+    [sIO setResourceName:@"node"];
     
     inHibernation = YES;
     

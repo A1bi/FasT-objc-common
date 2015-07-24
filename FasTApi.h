@@ -57,5 +57,6 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 - (void)unlockSeats;
 - (void)cancelBoxOfficeOrder:(FasTOrder *)order;
 - (void)cancelTickets:(NSArray *)tickets callback:(void (^)(FasTOrder *order))callback;
+- (void)enableResaleForTickets:(NSArray *)tickets callback:(void (^)(FasTOrder *order))callback;
 
 @end
