@@ -12,8 +12,9 @@
 #import "FasTOrder.h"
 #import "FasTTicket.h"
 #import "FasTTicketType.h"
-#import "MKNetworkEngine.h"
-#import "SocketIOPacket.h"
+
+@import SocketIOClientSwift;
+@import MKNetworkKit;
 
 NSString * const FasTApiIsReadyNotification = @"FasTApiIsReadyNotification";
 NSString * const FasTApiUpdatedSeatsNotification = @"FasTApiUpdatedSeatsNotification";
@@ -26,7 +27,7 @@ NSString * const FasTApiCannotConnectNotification = @"FasTApiCannotConnectNotifi
 static FasTApi *defaultApi = nil;
 
 #ifdef DEBUG
-    static NSString *kFasTApiUrl = @"127.0.0.1:4000";
+    static NSString *kFasTApiUrl = @"localhost:4000";
     static BOOL kFasTApiSSL = NO;
 #else
     static NSString *kFasTApiUrl = @"www.theater-kaisersesch.de";
@@ -110,60 +111,6 @@ static FasTApi *defaultApi = nil;
     [super dealloc];
 }
 
-#pragma mark SocketIO delegate methods
-
-- (void)socketIODidConnect:(SocketIO *)socket
-{
-    [self killScheduledTasks];
-    
-    [self postNotificationWithName:FasTApiIsReadyNotification info:nil];
-}
-
-- (void)socketIO:(SocketIO *)socket didReceiveEvent:(SocketIOPacket *)packet
-{
-    NSDictionary *info = [packet dataAsJSON][@"args"][0];
-    
-    if ([[packet name] isEqualToString:@"updateSeats"]) {
-        NSDictionary *seats = info[@"seats"];
-        [event updateSeats:seats];
-        
-        [self postNotificationWithName:FasTApiUpdatedSeatsNotification info:seats];
-        
-    } else if ([[packet name] isEqualToString:@"gotSeatingId"]) {
-        [seatingId release];
-        seatingId = [info[@"id"] retain];
-        
-    } else if ([[packet name] isEqualToString:@"updateEvent"]) {
-        [self initEventWithInfo:info[@"event"]];
-        
-    } else if ([[packet name] isEqualToString:@"updateOrders"]) {
-        [self updateOrdersWithArray:info];
-        
-    } else if ([[packet name] isEqualToString:@"expired"]) {
-        [self postNotificationWithName:FasTApiOrderExpiredNotification info:nil];
-    }
-}
-
-- (void)socketIODidDisconnect:(SocketIO *)socket disconnectedWithError:(NSError *)error
-{
-    [self killScheduledTasks];
-    if (inHibernation) return;
-    
-    [self postNotificationWithName:FasTApiDisconnectedNotification info:nil];
-    
-    [self scheduleReconnect];
-}
-
-- (void)socketIO:(SocketIO *)socket onError:(NSError *)error
-{
-    [self killScheduledTasks];
-    if (inHibernation) return;
-    
-    [self postNotificationWithName:FasTApiCannotConnectNotification info:nil];
-    
-    [self scheduleReconnect];
-}
-
 #pragma mark - rails api methods
 
 - (void)getResource:(NSString *)resource withAction:(NSString *)action callback:(FasTApiResponseBlock)callback
@@ -190,7 +137,7 @@ static FasTApi *defaultApi = nil;
 - (void)makeJsonRequestWithPath:(NSString *)path method:(NSString *)method data:(NSDictionary *)data callback:(FasTApiResponseBlock)callback
 {
 	MKNetworkOperation *op = [netEngine operationWithPath:path params:data httpMethod:method ssl:kFasTApiSSL];
-    [op setHeader:@"Accept" withValue:@"application/json"];
+    [op addHeaders:@{@"Accept": @"application/json"}];
 	[op setPostDataEncoding:MKNKPostDataEncodingTypeJSON];
 #ifdef DEBUG
     [op setShouldContinueWithInvalidCertificate:YES];
@@ -228,7 +175,7 @@ static FasTApi *defaultApi = nil;
 
 - (void)resetSeating
 {
-    [sIO sendEvent:@"reset" withData:nil];
+    [sIO emit:@"reset" withItems:@[]];
 }
 
 - (void)unlockSeats
@@ -266,19 +213,21 @@ static FasTApi *defaultApi = nil;
 - (void)setDate:(NSString *)dateId numberOfSeats:(NSInteger)numberOfSeats callback:(FasTApiResponseBlock)callback
 {
     NSDictionary *data = @{ @"date": dateId, @"numberOfSeats": @(numberOfSeats) };
-    [sIO sendEvent:@"setDateAndNumberOfSeats" withData:data andAcknowledge:callback];
+    [sIO emitWithAck:@"setDateAndNumberOfSeats" withItems:@[data]](0, ^(NSArray* data) {
+        NSDictionary *response = data.count > 0 ? data[0] : nil;
+        callback(response);
+    });
 }
 
 - (void)chooseSeatWithId:(NSString *)seatId
 {
     NSDictionary *data = @{ @"seatId": seatId };
-    [sIO sendEvent:@"chooseSeat" withData:data];
+    [sIO emit:@"chooseSeat" withItems:@[data]];
 }
 
 - (void)connectToNode
 {
-    [sIO setUseSecure:kFasTApiSSL];
-    [sIO connectToHost:kFasTApiUrl onPort:0 withParams:nil withNamespace:[NSString stringWithFormat:@"/%@", clientType]];
+    [sIO connect];
 }
 
 #pragma mark class methods
@@ -355,8 +304,9 @@ static FasTApi *defaultApi = nil;
     if (nodeConnectionInitiated) return;
     nodeConnectionInitiated = true;
     
-    sIO = [[SocketIO alloc] initWithDelegate:self];
-    [sIO setResourceName:@"node"];
+    NSString *scheme = kFasTApiSSL ? @"https" : @"http";
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@://%@", scheme, kFasTApiUrl]];
+    sIO = [[SocketIOClient alloc] initWithSocketURL:url options:@{@"log": @YES, @"path": @"/node/", @"nsp": [NSString stringWithFormat:@"/%@", clientType]}];
     
     inHibernation = YES;
     
@@ -366,6 +316,53 @@ static FasTApi *defaultApi = nil;
     [center addObserver:self selector:@selector(prepareNodeConnection) name:UIApplicationWillEnterForegroundNotification object:nil];
     
     [self prepareNodeConnection];
+    
+    [sIO on:@"connect" callback:^(NSArray *args, SocketAckEmitter *ack) {
+        [self killScheduledTasks];
+        
+        [self postNotificationWithName:FasTApiIsReadyNotification info:nil];
+    }];
+    
+    [sIO on:@"disconnect" callback:^(NSArray *args, SocketAckEmitter *ack) {
+        [self killScheduledTasks];
+        if (inHibernation) return;
+        
+        [self postNotificationWithName:FasTApiDisconnectedNotification info:nil];
+        
+        [self scheduleReconnect];
+    }];
+    
+    [sIO on:@"error" callback:^(NSArray *args, SocketAckEmitter *ack) {
+        [self killScheduledTasks];
+        if (inHibernation) return;
+    
+        [self postNotificationWithName:FasTApiCannotConnectNotification info:nil];
+    
+        [self scheduleReconnect];
+    }];
+    
+    
+    [sIO on:@"updateSeats" callback:^(NSArray *args, SocketAckEmitter *ack) {
+        NSDictionary *seats = args[0][@"seats"];
+        [event updateSeats:seats];
+
+        [self postNotificationWithName:FasTApiUpdatedSeatsNotification info:seats];
+    }];
+    
+    [sIO on:@"gotSeatingId" callback:^(NSArray *args, SocketAckEmitter *ack) {
+        [seatingId release];
+        seatingId = [args[0][@"id"] retain];
+    }];
+    
+    //    } else if ([[packet name] isEqualToString:@"updateEvent"]) {
+    //        [self initEventWithInfo:info[@"event"]];
+    //
+    //    } else if ([[packet name] isEqualToString:@"updateOrders"]) {
+    //        [self updateOrdersWithArray:info];
+    
+    [sIO on:@"expired" callback:^(NSArray *args, SocketAckEmitter *ack) {
+        [self postNotificationWithName:FasTApiOrderExpiredNotification info:nil];
+    }];
 }
 
 - (void)postNotificationWithName:(NSString *)name info:(NSDictionary *)info
@@ -379,7 +376,7 @@ static FasTApi *defaultApi = nil;
     if (!clientType) return;
     
     [self killScheduledTasks];
-    [self performSelector:@selector(abortAndReconnect) withObject:nil afterDelay:kFasTApiTimeOut];
+//    [self performSelector:@selector(abortAndReconnect) withObject:nil afterDelay:kFasTApiTimeOut];
     
     if (inHibernation) [self postNotificationWithName:FasTApiConnectingNotification info:nil];
     inHibernation = NO;
@@ -391,7 +388,7 @@ static FasTApi *defaultApi = nil;
 - (void)disconnect
 {
     inHibernation = YES;
-    [netEngine cancelAllOperations];
+//    [netEngine cancelAllOperations];
     [sIO disconnect];
 }
 

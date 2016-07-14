@@ -7,7 +7,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "SocketIO.h"
 
 FOUNDATION_EXPORT NSString * const FasTApiIsReadyNotification;
 FOUNDATION_EXPORT NSString * const FasTApiUpdatedSeatsNotification;
@@ -21,12 +20,13 @@ typedef void (^FasTApiResponseBlock)(NSDictionary *response);
 
 @class FasTEvent;
 @class FasTOrder;
+@class SocketIOClient;
 @class MKNetworkEngine;
 
-@interface FasTApi : NSObject <SocketIODelegate>
+@interface FasTApi : NSObject
 {
     MKNetworkEngine *netEngine;
-    SocketIO *sIO;
+    SocketIOClient *sIO;
     FasTEvent *event;
     NSString *clientType;
     NSString *clientId;
