@@ -8,5 +8,5 @@
 
 #import "FasTConstants.h"
 
-NSString * const FasTTicketPrinterNamePrefKey = @"FasTPrinterNamePrefKey";
+NSString * const FasTTicketPrinterUrlPrefKey = @"FasTPrinterUrlPrefKey";
 NSString * const FasTTicketPrinterDescriptionPrefKey = @"FasTPrinterDescriptionPrefKey";

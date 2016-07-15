@@ -8,12 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
-@class PKPrinter;
-
-@interface FasTTicketPrinter : NSObject
+@interface FasTTicketPrinter : NSObject <UIPrintInteractionControllerDelegate>
 {
-    NSString *ticketsPath;
-    PKPrinter *printer;
+    UIPrinter *printer;
 }
 
 + (FasTTicketPrinter *)sharedPrinter;

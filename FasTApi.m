@@ -27,7 +27,7 @@ NSString * const FasTApiCannotConnectNotification = @"FasTApiCannotConnectNotifi
 static FasTApi *defaultApi = nil;
 
 #ifdef DEBUG
-    static NSString *kFasTApiUrl = @"localhost:4000";
+    static NSString *kFasTApiUrl = @"ao-mbp.local:4000";
     static BOOL kFasTApiSSL = NO;
 #else
     static NSString *kFasTApiUrl = @"www.theater-kaisersesch.de";

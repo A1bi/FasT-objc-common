@@ -8,5 +8,5 @@
 
 #import <Foundation/Foundation.h>
 
-FOUNDATION_EXPORT NSString * const FasTTicketPrinterNamePrefKey;
+FOUNDATION_EXPORT NSString * const FasTTicketPrinterUrlPrefKey;
 FOUNDATION_EXPORT NSString * const FasTTicketPrinterDescriptionPrefKey;
