@@ -69,44 +69,40 @@ static FasTTicketPrinter *sharedPrinter = nil;
     if (!printer || tickets.count < 1) return;
     
     [[FasTApi defaultApi] fetchPrintableForTickets:tickets callback:^(NSData *data) {
-        dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-        dispatch_async(queue, ^{
+        UIPrintInteractionController *printController = [UIPrintInteractionController sharedPrintController];
+        printController.delegate = self;
+        printController.printingItem = data;
         
-            NSString *ticketsPath = [[NSString stringWithFormat:@"%@tickets.pdf", NSTemporaryDirectory()] retain];
+        [printController printToPrinter:printer completionHandler:NULL];
+    }];
+}
 
-            [data writeToFile:ticketsPath atomically:YES];
-        
+- (UIPrintPaper *)printInteractionController:(UIPrintInteractionController *)printInteractionController choosePaper:(NSArray<UIPrintPaper *> *)paperList {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wobjc-method-access"
 #pragma clang diagnostic ignored "-Wundeclared-selector"
-            
-//            CFURLRef url = (__bridge CFURLRef)[NSURL fileURLWithPath:ticketsPath];
-//            CGPDFDocumentRef document = CGPDFDocumentCreateWithURL(url);
-//            CGPDFPageRef firstPage = CGPDFDocumentGetPage(document, 1);
-//            CGSize pageSize = CGPDFPageGetBoxRect(firstPage, kCGPDFMediaBox).size;
-//            CGPDFDocumentRelease(document);
-            
-            Class PKPaper = NSClassFromString(@"PKPaper");
-            id paper = [PKPaper genericA4Paper];
-            [paper setTopMargin:0];
-            [paper setRightMargin:0];
-            [paper setBottomMargin:0];
-            [paper setLeftMargin:0];
-//            [paper setWidth:kPointsToMillimeters(pageSize.height)];
-//            [paper setHeight:kPointsToMillimeters(pageSize.width)];
-            
-            Class PKPrintSettings = NSClassFromString(@"PKPrintSettings");
-            id settings = [PKPrintSettings default];
-            [settings setPaper:paper];
-            
-            id p = [printer performSelector:@selector(_internalPrinter)];
-            [p printURL:[NSURL fileURLWithPath:ticketsPath] ofType:@"application/pdf" printSettings:settings];
-            
-            [[NSFileManager defaultManager] removeItemAtPath:ticketsPath error:nil];
+//    NSData *data = [printInteractionController _printingItem];
+//    CGDataProviderRef dataRef = CGDataProviderCreateWithCFData((CFDataRef)data);
+//    CGPDFDocumentRef document = CGPDFDocumentCreateWithProvider(dataRef);
+//    CGPDFPageRef firstPage = CGPDFDocumentGetPage(document, 1);
+//    CGSize pageSize = CGPDFPageGetBoxRect(firstPage, kCGPDFMediaBox).size;
+//    CGPDFDocumentRelease(document);
+//    
+//    int height = ceil(kPointsToMillimeters(pageSize.height));
+//    int width = ceil(kPointsToMillimeters(pageSize.width));
+    
+    Class PKPaper = NSClassFromString(@"PKPaper");
+//    id pkPaper = [[[PKPaper alloc] initWithWidth:21000 Height:9900 Left:0 Top:0 Right:0 Bottom:0 localizedName:nil codeName:nil] autorelease];
+    id pkPaper = [PKPaper genericA4Paper];
+    [pkPaper setTopMargin:0];
+    [pkPaper setRightMargin:0];
+    [pkPaper setBottomMargin:0];
+    [pkPaper setLeftMargin:0];
+    
+    UIPrintPaper *paper = [[[UIPrintPaper alloc] _initWithPrintKitPaper:pkPaper] autorelease];
+    return paper;
 #pragma clang diagnostic pop
 #pragma clang diagnostic pop
-        });
-    }];
 }
 
 @end
